@@ -53,6 +53,7 @@ struct slspp {
 #define SLF_OUTWAIT 4
 
   unsigned char mode;
+  unsigned char leased;
   dev_t line;
   pid_t pid;
 }
