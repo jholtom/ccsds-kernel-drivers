@@ -1,0 +1,11 @@
+#
+# SLSSP Network Device Configuration
+#
+config SLSSP
+    tristate "SLSSP (serial line) support"
+    depends on TTY
+    ---help---
+      Turn this on if you want to use the Adamant Aerospace Elysium's strange
+      serial protocol for sending SPP packets through a nice network device
+
+# Add other config options as needed
