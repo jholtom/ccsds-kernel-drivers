@@ -20,9 +20,6 @@
 #include <linux/compat.h>
 #include <linux/delay.h>
 #include <linux/errno.h>
-#include <linux/etherdevice.h>
-#include <linux/if_arp.h>
-#include <linux/if_slip.h>
 #include <linux/in.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
@@ -41,11 +38,11 @@
 
 #define SLSPP_VERSION "0.0.1"
 
-static struct net_device **slip_devs;
+static struct net_device **slspp_devs;
 
-static int slip_maxdev = SL_NRUNIT;
-module_param(slip_maxdev, int, 0);
-MODULE_PARM_DESC(slip_maxdev, "Maximum number of slspp devices");
+static int slspp_maxdev = SL_NRUNIT;
+module_param(slspp_maxdev, int, 0);
+MODULE_PARM_DESC(slspp_maxdev, "Maximum number of slspp devices");
 
 static int slspp_esc(unsigned char *p, unsigned char *d, int len);
 static void slspp_unesc(struct slspp *sl, unsigned char c);
@@ -68,13 +65,184 @@ static void sl_free_bufs(struct slspp *sl) { /* METHOD STUB */
 static int sl_realloc_bufs(struct slspp *sl, int mtu) { /* METHOD STUB */
 }
 
+static inline void sl_lock(struct slspp *sl)
+{
+    netif_stop_queue(sl->dev);
+}
+
+static inline void sl_unlock(struct slspp *sl)
+{
+    netif_wake_queue(sl->dev);
+}
+
+static void sl_bump(struct slspp *sl)
+{
+
+}
+
+static void sl_encaps(struct slspp *sl, unsigned char *icp, int len)
+{
+
+}
+
+static void slspp_write_wakeup(struct tty_struct *tty)
+{
+
+}
+
+static void sl_tx_timeout(struct net_device *dev)
+{
+
+}
+
+static netdev_tx_t sl_xmit(struct sk_buff *skb, struct net_device *dev)
+{
+
+}
+
+static int sl_close(struct net_device *dev)
+{
+
+}
+
+static int sl_open(struct net_device *dev)
+{
+
+}
+
+static int sl_change_mtu(struct net_device *dev, int new_mtu)
+{
+
+}
+
+static struct net_device_stats * sl_get_stats(struct net_device *dev)
+{
+
+}
+
+static int sl_init(struct net_device *dev)
+{
+
+}
+
+static void sl_uninit(struct net_device *dev)
+{
+    struct slspp *sl = netdev_priv(dev);
+    sl_free_bufs(sl);
+}
+
+static void sl_free_netdev(struct net_device *dev)
+{
+    int i = dev->base_addr;
+    free_netdev(dev);
+    slspp_devs[i] = NULL;
+}
+
+static const struct net_device_ops sl_netdev_ops = {
+	.ndo_init		= sl_init,
+	.ndo_uninit	  	= sl_uninit,
+	.ndo_open		= sl_open,
+	.ndo_stop		= sl_close,
+	.ndo_start_xmit		= sl_xmit,
+	.ndo_get_stats	        = sl_get_stats,
+	.ndo_change_mtu		= sl_change_mtu,
+	.ndo_tx_timeout		= sl_tx_timeout,
+        .ndo_do_ioctl           = sl_ioctl
+};
+
+static void sl_setup(struct net_device *dev)
+{
+
+}
+
+static void slspp_receive_buf(struct tty_struct *tty, const unsigned char *cp, char *fp, int count)
+{
+
+}
+
+static void sl_sync(void)
+{
+
+}
+
+static struct slspp *sl_alloc(dev_t line)
+{
+
+}
+
+static int slspp_open(struct tty_struct *tty)
+{
+
+}
+
+static void slspp_close(struct tty_struct *tty)
+{
+
+}
+
+static int slspp_hangup(struct tty_struct *tty){
+slspp_close(tty);
+return 0;
+}
+
 static int slspp_esc(unsigned char *s, unsigned char *d, int len)
 {
+    unsigned char *ptr = d;
+    unsigned char c;
+
+    *ptr++ = END; // Clear the receiver by sending an initial END char
+
+    /* For each byte in the packet, send the char sequence */
+    while(len-- > 0){
+        switch (c = *s++){
+            case END:
+                *ptr++ = ESC;
+                *ptr++ = ESC_END;
+                break;
+            case ESC:
+                *ptr++ = ESC;
+                *ptr++ = ESC_ESC;
+                break;
+            default:
+                *ptr++ = c;
+                break;
+        }
+    }
+    *ptr++ = END;
+    return (ptr - d);
 
 }
 static void slspp_unesc(struct slspp *sl, unsignec char s) 
 {
+	switch (s) {
+	case END:
+		if (!test_and_clear_bit(SLF_ERROR, &sl->flags) &&
+		    (sl->rcount > 2))
+			sl_bump(sl);
+		clear_bit(SLF_ESCAPE, &sl->flags);
+		sl->rcount = 0;
+		return;
 
+	case ESC:
+		set_bit(SLF_ESCAPE, &sl->flags);
+		return;
+	case ESC_ESC:
+		if (test_and_clear_bit(SLF_ESCAPE, &sl->flags))
+			s = ESC;
+		break;
+	case ESC_END:
+		if (test_and_clear_bit(SLF_ESCAPE, &sl->flags))
+			s = END;
+		break;
+	}
+	if (!test_bit(SLF_ERROR, &sl->flags))  {
+		if (sl->rcount < sl->buffsize)  {
+			sl->rbuff[sl->rcount++] = s;
+			return;
+		}
+		sl->rx_over_errors++;
+		set_bit(SLF_ERROR, &sl->flags);
+	}
 }
 
 static int slspp_ioctl(struct tty_struct *tty, struct file *file,
@@ -98,10 +266,10 @@ static struct tty_ldisc_ops sl_ldsic = {.owner = THIS_MODULE,
                                         .receive_buf = slspp_receive_buf,
                                         .write_wakeup = slspp_write_wakeup};
 
-static int __init slip_init(void) { /* METHOD STUB */
+static int __init slspp_init(void) { /* METHOD STUB */
 }
 
-static void __exit slip_exit(void) { /* METHOD STUB */
+static void __exit slspp_exit(void) { /* METHOD STUB */
 }
 
 module_init(slspp_init);

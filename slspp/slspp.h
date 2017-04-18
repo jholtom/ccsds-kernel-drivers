@@ -24,7 +24,7 @@
 #define ESC_ESC 0335 /* ESC ESC_ESC means ESC 'data' */
 
 struct slspp {
-  int magic; /* May not need? */
+  int magic;
   struct tty_struct *tty;
   struct net_device *dev;
   spinlock_t lock;
@@ -57,6 +57,6 @@ struct slspp {
   pid_t pid;
 }
 
-#define SLIP_MAGIC 0x5302 /* May not need ? */
+#define SLSPP_MAGIC 0x5305
 
 #endif
