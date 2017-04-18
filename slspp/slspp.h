@@ -1,16 +1,3 @@
-// Copyright 2017 by Jacob Holtom and the Brigham Young University Passive
-// Inspection CubeSat Team (BYU PICS)
-// All rights reserved
-//
-// Authors: Jacob Holtom
-// File:    slspp.h
-//
-// This file defines the SLSPP device driver interface and constants.
-//
-// References:
-//     Elysium Radio User Manual (elysium_manual.pdf), September 16th 2016
-//     Linux Device Drivers - O'Reilly
-//
 #ifndef _LINUX_SLSPP_H
 #define _LINUX_SLSPP_H
 

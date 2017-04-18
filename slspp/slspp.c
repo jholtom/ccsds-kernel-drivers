@@ -1,14 +1,3 @@
-// Copyright 2017 by Jacob Holtom and the Brigham Young University Passive
-// Inspection CubeSat Team (BYU PICS)
-// All rights reserved
-//
-// Authors: Jacob Holtom
-// File:    slspp.c
-//
-// References:
-//     Elysium Radio User Manual (elysium_manual.pdf), September 16th 2016
-//     Linux Device Drivers - O'Reilly
-//
 #define SL_CHECK_TRANSMIT
 #include <linux/module.h>
 #include <linux/moduleparam.h>
