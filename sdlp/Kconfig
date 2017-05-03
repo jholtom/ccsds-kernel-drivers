@@ -1,0 +1,11 @@
+#
+# SDLP Network Device Configuration
+#
+config SDLP
+    tristate "SDLP (Space Data Link Protocol) support"
+    depends on TTY
+    ---help---
+        Turn this on if you want to use CCSDS 133.#### Space Data Link Protocol with TM
+        Synchronization for communicating with a TTY or similar device
+
+# Add other necessary config options
