@@ -19,7 +19,7 @@ static const struct proto_ops spp_proto_ops;
  */
 
 /* 
- * Structs for initilaization
+ * Structs for initialization
  */
 
 static const struct file_operations spp_info_fops = {
@@ -74,7 +74,7 @@ module_init(spp_init);
 
 MODULE_AUTHOR("Jacob Holtom <jacob@holtom.me>");
 MODULE_DESCRIPTION("The CCSDS Space Packet Protocol");
-MODULE_LICENSE("GPL"); //This kills me inside.
+MODULE_LICENSE("GPL");
 MODULE_ALIAS_NETPROTO(PF_SPP);
 
 static void __exit spp_exit(void)
