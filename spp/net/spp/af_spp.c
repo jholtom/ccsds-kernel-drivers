@@ -40,7 +40,10 @@ DEFINE_SPINLOCK(spp_list_lock);
 
 int sppcmp(spp_address *addr1, spp_address *addr2)
 {
-   //Compare two SPP address' 
+    if(addr1->spp_apid == addr2->spp_apid)
+	    return 0;
+    else
+	    return 1;
 }
 
 static const struct proto_ops spp_proto_ops;
