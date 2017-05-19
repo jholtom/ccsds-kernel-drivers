@@ -47,10 +47,7 @@ char *spp2ascii(char *buf, const spp_address *addr)
 
 int sppcmp(spp_address *addr1, spp_address *addr2)
 {
-    if(addr1->spp_apid == addr2->spp_apid)
-	    return 0;
-    else
-	    return 1;
+   //Compare two SPP address' 
 }
 
 static const struct proto_ops spp_proto_ops;
@@ -82,6 +79,41 @@ static int spp_listen(struct socket *sock, int backlog)
 
 /* Handle Device Status changes */
 static int spp_device_event(struct notifier_block *this, unsigned long event, void *ptr)
+{
+
+}
+
+static int spp_release(struct socket *sock)
+{
+
+}
+
+static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
+{
+
+}
+
+static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len, int flags)
+{
+
+}
+
+static int spp_accept(struct socket *sock, struct socket *newsock, int flags)
+{
+
+}
+
+static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_len, int peer)
+{
+
+}
+
+static int spp_sendmsg(struct socket *sock, struct msghdr *msg, size_t len)
+{
+
+}
+
+static int spp_recvmsg(struct socket *sock, struct msghdr *msg, size_t size, int flags)
 {
 
 }
