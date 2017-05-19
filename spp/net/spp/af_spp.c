@@ -47,7 +47,10 @@ char *spp2ascii(char *buf, const spp_address *addr)
 
 int sppcmp(spp_address *addr1, spp_address *addr2)
 {
-   //Compare two SPP address' 
+    if(addr1->spp_apid == addr2->spp_apid)
+        return 0;
+    else
+        return 1;
 }
 
 static const struct proto_ops spp_proto_ops;
@@ -123,7 +126,7 @@ static int spp_info_show(struct seq_file *seq, void *v)
     char buf[11], rsbuf[11];
 
     if(v == SEQ_START_TOKEN)
-            seq_puts(seq, ""); /* TODO: fill out with format */
+        seq_puts(seq, ""); /* TODO: fill out with format */
     else {
         /* TODO: Fill with logic */ 
     }
@@ -153,7 +156,7 @@ static const struct seq_operations spp_info_seqops = {
 };
 
 static int spp_info_open(struct inode *inode, struct file *file){
-	return seq_open(file, &spp_info_seqops);
+    return seq_open(file, &spp_info_seqops);
 }
 
 static const struct file_operations spp_info_fops = {
@@ -214,13 +217,13 @@ MODULE_ALIAS_NETPROTO(PF_SPP);
 static void __exit spp_exit(void)
 {
     remove_proc_entry() //Probably only need one to kill the family
-    unregister_netdevice_notifier(&spp_dev_notifier);
+        unregister_netdevice_notifier(&spp_dev_notifier);
     //Unregister sysctl parts
-    
+
     dev_remove_pack(&spp_packet_type);
     sock_unregister(PF_SPP);
     proto_unregister(&spp_proto);
-    
+
     //Any other free()'s
 }
 module_exit(spp_exit);
