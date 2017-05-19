@@ -164,18 +164,40 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     return 0;
 }
 
+#ifdef CONFIG_PROC_FS
 static int spp_info_show(struct seq_file *seq, void *v)
 {
     char buf[11], rsbuf[11];
 
     if(v == SEQ_START_TOKEN)
-        seq_puts(seq, ""); /* TODO: fill out with format */
+	    seq_puts(seq, "dest_addr  src_addr  dev   lci  st vs vr va   t  t1  t2  t3  hb    idle Snd-Q Rcv-Q inode\n"); /* Check formatting as it applies to the rest of my prints */
     else {
-        /* TODO: Fill with logic */ 
+        struct sock *s = sk_entry(v);
+        struct spp_sock *spp = spp_sk(s);
+        const char *devname, *address;
+        if (!dev)
+            devname = "???";
+        else
+            devname = dev->name;
+
+	 seq_printf(seq, "%-10s ", spp2ascii(rsbuf, &spp->d_addr)); /*Prints destination address */
+         
+         seq_printf(seq, "%-10s %-5s %3.3X  %d  %d  %d  %d %3lu %3lu %3lu %3lu %3lu %3lu/%03lu %5d %5d %ld\n", spp2ascii(rsbuf, &spp->s_addr),
+                 devname,
+                 spp->lci & 0x0FFF,
+                 spp->state,
+                 spp->vs,
+                 spp->vr,
+                 spp->va,
+                 /* TODO: take care of timer prints here*/
+                 sk_wmem_alloc_get(s),
+                 sk_rmem_alloc_get(s), 
+                 s->sk_socket ? SOCK_INDOE(s->sk_socket)->i_indo : 0L);
+
     }
     return 0;
 }
-#ifdef CONFIG_PROC_FS
+
 static void *spp_info_next(struct seq_file *seq, void *v, loff_t *pos)
 {
     return seq_hlist_next(v, &spp_list, pos);
@@ -183,12 +205,13 @@ static void *spp_info_next(struct seq_file *seq, void *v, loff_t *pos)
 
 static void *spp_info_start(struct seq_file *seq, loff_t *pos) __acquires(spp_list_lock)
 {
-
+    spin_lock_bh(&spp_list_lock);
+    return seq_hlist_start_head(&spp_list, *pos);
 }
 
 static void spp_info_stop(struct seq_file *seq, void *v) __releases(spp_list_lock)
 {
-
+    spin_unlock_bh(&spp_list_lock);
 }
 
 static const struct seq_operations spp_info_seqops = {
@@ -210,12 +233,15 @@ static const struct file_operations spp_info_fops = {
     .release = seq_release,
 };
 #endif /* CONFIG_PROC_FS */
+
+/* SPP Family operations */
 static const struct net_proto_family spp_family_ops = {
     .family = PF_SPP,
     .create = spp_create,
     .owner = THIS_MODULE,
 };
 
+/* Protocol operations struct */
 static const struct proto_ops spp_proto_ops = {
     .family = PF_SPP,
     .owner = THIS_MODULE,
@@ -246,6 +272,7 @@ static struct notifier_block spp_dev_notifier = {
     .notifier_call = spp_device_event,
 };
 
+/* Initializes SPP in kernel (module_init) */
 static int __init spp_init(void)
 {
     int i;
@@ -261,8 +288,8 @@ static int __init spp_init(void)
     sock_register(&spp_family_ops);
     register_netdevice_notifier(&spp_dev_notifier);
 
-    spp_register_pid(&spp_pid);
-    spp_linkfail_register(&spp_linkfail_notifier);
+    spp_register_pid(&spp_pid); /*TODO: I don't think I need this, ensure I don't, then remove */
+    spp_linkfail_register(&spp_linkfail_notifier); /* TODO: Probably need, but check */
 
 #ifdef CONFIG_SYSCTL
     spp_register_sysctl();
@@ -282,6 +309,7 @@ MODULE_DESCRIPTION("The CCSDS Space Packet Protocol");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS_NETPROTO(PF_SPP);
 
+/* Called on module_exit, removes SPP from kernel */
 static void __exit spp_exit(void)
 {
     remove_proc_entry() //Probably only need one to kill the family
