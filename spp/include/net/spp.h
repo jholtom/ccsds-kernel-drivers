@@ -16,4 +16,10 @@
 #define SPP_HEADER_LEN 32 /* 32 bit header length */
 #define SPP_APID_LEN 11 /* 11 bit APID length */
 
+/*
+ *
+ */
+
+
+
 /* What do we do about secondary headers? */
