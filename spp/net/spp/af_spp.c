@@ -38,6 +38,8 @@ int sysctl_spp_window_size = SPP_DEFAULT_WINDOW_SIZE; //Who knows if I need a wi
 HLIST_HEAD(spp_list);
 DEFINE_SPINLOCK(spp_list_lock);
 
+spp_address spp_addr;
+
 char *spp2ascii(char *buf, const spp_address *addr)
 {
     //Generate a human readable version of this int
@@ -60,8 +62,50 @@ static void spp_remove_sock(struct sock *sk)
     spin_unlock_bh(&spp_list_lock);
 }
 
+static int spp_setsockopt(struct socket *sock, int level, intoptname, char __user *optval, unsigned int optlen)
+{
+    /* TODO: implement socket option setter */
+}
+
+static int spp_setsockopt(struct socket *sock, int level, intoptname, char __user *optval, unsigned int optlen)
+{
+    /* TODO: implement socket option getter */
+}
+
+static int spp_listen(struct socket *sock, int backlog)
+{
+    /* TODO: implement socket listener */
+}
+
 /* Handle Device Status changes */
 static int spp_device_event(struct notifier_block *this, unsigned long event, void *ptr)
+{
+
+}
+
+static int spp_info_show(struct seq_file *seq, void *v)
+{
+    char buf[11], rsbuf[11];
+
+    if(v == SEQ_START_TOKEN)
+            seq_puts(seq, ""); /* TODO: fill out with format */
+    else {
+        /* TODO: Fill with logic */ 
+    }
+    return 0;
+}
+
+static void *spp_info_next(struct seq_file *seq, void *v, loff_t *pos)
+{
+    return seq_hlist_next(v, &spp_list, pos);
+}
+
+static void *spp_info_start(struct seq_file *seq, loff_t *pos) __acquires(spp_list_lock)
+{
+
+}
+
+static void spp_info_stop(struct seq_file *seq, void *v) __releases(spp_list_lock)
 {
 
 }
@@ -136,6 +180,8 @@ static void __exit spp_exit(void)
 {
     remove_proc_entry() //Probably only need one to kill the family
     unregister_netdevice_notifier(&spp_dev_notifier);
+    //Unregister sysctl parts
+    
     dev_remove_pack(&spp_packet_type);
     sock_unregister(PF_SPP);
     proto_unregister(&spp_proto);
