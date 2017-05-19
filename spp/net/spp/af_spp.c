@@ -113,12 +113,55 @@ static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_l
 
 static int spp_sendmsg(struct socket *sock, struct msghdr *msg, size_t len)
 {
+   struct sock *sk = sock->sk;
+   struct spp_sock *spp = spp_sk(sk);
+   DECLARE_SOCKADDR(struct sockaddr_spp *, usspp, msg->msg_name);
+   int err;
+   struct sockaddr_spp sspp;
+   struct sk_buff *skb;
+   unsigned char *asmptr;
+   int n, size, qbit = 0;
 
+   /* Do some checks whether or not something is bad about the message */
+   if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_EOR|MSG_CMSG_COMPAT))
+        return -EINVAL;
+   /* Check whether or not the socket is zapped */
+
+   /* Check if pipe has shutdown */
+
+   /* Can't reach the other end? */
+
+   if(usspp != NULL) {
+        /* Do something */
+   }
 }
 
 static int spp_recvmsg(struct socket *sock, struct msghdr *msg, size_t size, int flags)
 {
+    struct sock *sk = sock->sk;
+    struct spp_sock *spp = spp_sk(sk);
+    size_t copied;
+    unsigned char *asmptr;
+    struct sk_buff *skb;
+    int n, er, qbit;
 
+
+}
+
+static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
+{
+    struct sock *sk = sock->sk;
+    struct spp_sock *spp = spp_sk(sk);
+    void __user *argp = (void __user *)arg;
+
+    switch (cmd) {
+    case :
+    case :
+
+    default:
+        return -ENOIOCTLCMD;
+    }
+    return 0;
 }
 
 static int spp_info_show(struct seq_file *seq, void *v)
@@ -132,7 +175,7 @@ static int spp_info_show(struct seq_file *seq, void *v)
     }
     return 0;
 }
-
+#ifdef CONFIG_PROC_FS
 static void *spp_info_next(struct seq_file *seq, void *v, loff_t *pos)
 {
     return seq_hlist_next(v, &spp_list, pos);
@@ -165,8 +208,8 @@ static const struct file_operations spp_info_fops = {
     .read = seq_read,
     .llseek = seq_lseek,
     .release = seq_release,
-};  //This is needed if CONFIG_PROC_FS is true...
-
+};
+#endif /* CONFIG_PROC_FS */
 static const struct net_proto_family spp_family_ops = {
     .family = PF_SPP,
     .create = spp_create,
@@ -205,7 +248,32 @@ static struct notifier_block spp_dev_notifier = {
 
 static int __init spp_init(void)
 {
+    int i;
+    int rc;
+    
+    rc = proto_register(&spp_proto, 0);
+    
+    if( rc != 0)
+        goto out;
+    
+    spp_address = null_spp_address; /* TODO: Ensure I'm setting the right global and create a null SPP address */
+    
+    sock_register(&spp_family_ops);
+    register_netdevice_notifier(&spp_dev_notifier);
 
+    spp_register_pid(&spp_pid);
+    spp_linkfail_register(&spp_linkfail_notifier);
+
+#ifdef CONFIG_SYSCTL
+    spp_register_sysctl();
+#endif
+    spp_loopback_init(); /* TODO: May not need a loopback as we have no routing */
+
+    proc_create("spp", S_IRUGO, init_net.proc_net, &spp_info_fops);
+    proc_create("spp_entities", S_IRUGO, init_net.proc_net, &spp_nodes_fops);
+
+out:
+    return rc;
 }
 module_init(spp_init);
 
