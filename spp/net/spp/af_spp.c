@@ -38,6 +38,11 @@ int sysctl_spp_window_size = SPP_DEFAULT_WINDOW_SIZE; //Who knows if I need a wi
 HLIST_HEAD(spp_list);
 DEFINE_SPINLOCK(spp_list_lock);
 
+char *spp2ascii(char *buf, const spp_address *addr)
+{
+    //Generate a human readable version of this int
+}
+
 int sppcmp(spp_address *addr1, spp_address *addr2)
 {
    //Compare two SPP address' 
@@ -45,19 +50,20 @@ int sppcmp(spp_address *addr1, spp_address *addr2)
 
 static const struct proto_ops spp_proto_ops;
 
-static void spp_free_sock(struct sock *sk)
+/* Remove the poor socket 
+ * also its safe to do it in an interrupt now lol.
+ */
+static void spp_remove_sock(struct sock *sk)
 {
-    spp_cb_put(sk_to_spp(sk));
+    spin_lock_bh(&spp_list_lock);
+    sk_del_node_init(sk);
+    spin_unlock_bh(&spp_list_lock);
 }
 
-static void spp_cb_del(spp_cb *spp)
+/* Handle Device Status changes */
+static int spp_device_event(struct notifier_block *this, unsigned long event, void *ptr)
 {
-    if(!hlist_unhashed(&spp->/* What defines SPP callbacks*/)) {
-        spin_lock_bh(&spp_list_lock);
-        hlist_del_init(&spp->/* What defines SPP callbacks*/);
-        spin_unlock_bh(&spp_list_lock);
-        spp_cb_put(spp);
-    }
+
 }
 
 static const struct seq_operations spp_info_seqops = {
