@@ -33,6 +33,12 @@
 #include <linux/init.h>
 #include <linux/spinlock.h>
 
+int sysctl_spp_restart_request_timeout = SPP_DEFAULT_T0;
+int sysctl_spp_call_request_timeout    = SPP_DEFAULT_T1;
+int sysctl_spp_reset_request_timeout   = SPP_DEFAULT_T2;
+int sysctl_spp_clear_request_timeout   = SPP_DEFAULT_T3;
+int sysctl_spp_no_activity_timeout = SPP_DEFAULT_IDLE;
+int sysctl_spp_link_fail_timeout = SPP_DEFAULT_FAIL_TIMEOUT;
 int sysctl_spp_window_size = SPP_DEFAULT_WINDOW_SIZE; //Who knows if I need a window, just put it here in case I do.
 
 HLIST_HEAD(spp_list);
@@ -40,18 +46,7 @@ DEFINE_SPINLOCK(spp_list_lock);
 
 spp_address spp_addr;
 
-char *spp2ascii(char *buf, const spp_address *addr)
-{
-    //Generate a human readable version of this int
-}
 
-int sppcmp(spp_address *addr1, spp_address *addr2)
-{
-    if(addr1->spp_apid == addr2->spp_apid)
-        return 0;
-    else
-        return 1;
-}
 
 static const struct proto_ops spp_proto_ops;
 
@@ -283,7 +278,7 @@ static int __init spp_init(void)
     if( rc != 0)
         goto out;
     
-    spp_address = null_spp_address; /* TODO: Ensure I'm setting the right global and create a null SPP address */
+    spp_addr = spp_nulladdr; /* TODO: Ensure I'm setting the right global and create a null SPP address */
     
     sock_register(&spp_family_ops);
     register_netdevice_notifier(&spp_dev_notifier);
