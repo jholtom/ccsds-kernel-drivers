@@ -33,10 +33,6 @@
 #include <linux/init.h>
 #include <linux/spinlock.h>
 
-int sysctl_spp_restart_request_timeout = SPP_DEFAULT_T0;
-int sysctl_spp_call_request_timeout    = SPP_DEFAULT_T1;
-int sysctl_spp_reset_request_timeout   = SPP_DEFAULT_T2;
-int sysctl_spp_clear_request_timeout   = SPP_DEFAULT_T3;
 int sysctl_spp_no_activity_timeout = SPP_DEFAULT_IDLE;
 int sysctl_spp_link_fail_timeout = SPP_DEFAULT_FAIL_TIMEOUT;
 int sysctl_spp_window_size = SPP_DEFAULT_WINDOW_SIZE; //Who knows if I need a window, just put it here in case I do.
@@ -158,12 +154,6 @@ static int spp_create(struct net *net, struct socket *sock, int protocol, int ke
 
     return 0;
 }
-
-static struct sock *spp_make_new(struct sock *osk)
-{
-
-}
-
 
 /* Handle Device Status changes */
 static int spp_device_event(struct notifier_block *this, unsigned long event, void *ptr)

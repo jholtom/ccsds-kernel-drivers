@@ -12,6 +12,7 @@ typedef struct {
     int spp_apid : 11; /* 11 bit APID */
     /* Done in a struct to facilitate expansion to other addressing parameters (unlikely) */
 } spp_address;
+/* May need to add TM/TC parameter here, 1 bit flag */
 
 struct sockaddr_spp {
     __kernel_sa_family_t sspp_family;
