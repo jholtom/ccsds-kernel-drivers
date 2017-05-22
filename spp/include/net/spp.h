@@ -28,7 +28,7 @@ struct spp_sock {
     unsigned char state, condition, qbitincl, defer;
     unsigned char cause, diagnostic;
     unsigned short vs, vr, va, vl;
-    unsigned long t1,t2,t3,hb,idle;
+    unsigned long t1,t2,t3,idle;
 #ifdef M_BIT
     unsigned short  fraglen;
     struct sk_buff_head     frag_queue;

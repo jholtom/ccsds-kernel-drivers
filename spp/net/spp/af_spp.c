@@ -46,8 +46,6 @@ DEFINE_SPINLOCK(spp_list_lock);
 
 spp_address spp_addr;
 
-
-
 static const struct proto_ops spp_proto_ops;
 
 /* Remove the poor socket 
@@ -58,6 +56,39 @@ static void spp_remove_sock(struct sock *sk)
     spin_lock_bh(&spp_list_lock);
     sk_del_node_init(sk);
     spin_unlock_bh(&spp_list_lock);
+}
+
+/* Kill all bound sockets on a device that dropped */
+static void spp_kill_by_device(struct net_device *dev)
+{
+    struct sock *s;
+    spin_lock_bh(&spp_list_lock);
+    sk_for_each(s, &spp_list) {
+        struct spp_sock *spp = spp_sk(s);
+        if(spp->device == dev){
+            spp_disconnect(s, ENETUNREACH,SPP_OUT_OF_ORDER,0);
+            /* TODO: Remove from routes */
+            spp->device = NULL;
+        }
+    }
+    spin_unlock_bh(&spp_list_lock);
+}
+
+/* Add a socket to the bound sockets list */
+spp_insert_socket(structk sock *sk)
+{
+    spin_lock_bh(&spp_list_lock);
+    sk_add_node(sk, &spp_list);
+    spin_unlock_bh(&spp_list_lock);
+}
+
+/* Deferred destroy */
+void spp_destroy_socket(struct sock *);
+
+/* Handles deferred socket kills */
+static void spp_destroy_timer(unsigned long data)
+{
+    spp_destroy_socket((struct sock *)data);
 }
 
 static int spp_setsockopt(struct socket *sock, int level, intoptname, char __user *optval, unsigned int optlen)
@@ -72,8 +103,67 @@ static int spp_setsockopt(struct socket *sock, int level, intoptname, char __use
 
 static int spp_listen(struct socket *sock, int backlog)
 {
-    /* TODO: implement socket listener */
+    struct sock *sk = sock->sk;
+    /* TODO: verify functionality and correctness */ 
+    if(sk->sk_state != TCP_LISTEN){
+        struct spp_sock *spp = spp_sk(sk);
+
+        memset(&spp->d_addr, 0, SPP_ADDR_LEN);
+        sk->sk_max_ack_backlog = backlog;
+        sk->sk_state = TCP_LISTEN;
+        return 0;
+    }
+    return -EOPNOTSUPP;
 }
+
+static struct proto spp_proto = {
+    .name = "SPP",
+    .owner = THIS_MODULE,
+    .obj_size = sizeof(struct spp_sock),
+};
+
+static int spp_create(struct net *net, struct socket *sock, int protocol, int kern)
+{
+    struct sock *sk;
+    struct spp_sock *spp;
+
+    if(!net_eq(net, &init_net))
+        return -EAFNOSUPPORT;
+
+    if(sock->type != SOCK_SEQPACKET || protocol != 0)
+        return -ESOCKTNOSUPPORT;
+
+    sk = sk_alloc(net, PF_SPP, GFP_ATOMIC, &spp_proto,kern);
+    if (sk == NULL)
+        return -ENOMEM;
+    spp = spp_sk(sk);
+    sock_init_data(sock, sk);
+    skb_queue_head_init(&spp->ack_queue);
+#ifdef M_BIT
+    skb_queue_head_init(&spp->frag_queue);
+    spp->fraglen = 0;
+#endif
+    sock->ops = &spp_proto_ops;
+    sk->sk_protocol = protocol;
+
+    init_timer(&spp->timer);
+    init_timer(&spp->idletimer);
+
+    spp->t1 = msecs_to_jiffies(sysctl_spp_call_request_timeout);
+    spp->t2 = msecs_to_jiffies(sysctl_spp_reset_request_timeout);
+    spp->t3 = msecs_to_jiffies(sysctl_spp_clear_request_timeout);
+    spp->idle = msecs_to_jiffies(sysctl_spp_no_activity_timeout);
+
+    spp->state = SPP_STATE_0;
+
+    return 0;
+}
+
+static struct sock *spp_make_new(struct sock *osk)
+{
+
+}
+
 
 /* Handle Device Status changes */
 static int spp_device_event(struct notifier_block *this, unsigned long event, void *ptr)
