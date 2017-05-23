@@ -22,21 +22,23 @@
 /* The default broadcast address of an interface is:  
  * The default address is:
  * The null address is: 00000000000
+ * The idle address is: 11111111111
  */
 
 const spp_address spp_bcast = {{}};
 const spp_address spp_defaddr = {{}};
 const spp_address spp_nulladdr = {0};
+const spp_address spp_idleaddr = {{}};
 
 char *spp2ascii(char *buf, const spp_address *addr)
 {
-    //Generate a human readable version of this int (ASCII)
+    /* TODO: Generate a human readable version of this int (ASCII) */
 }
 EXPORT_SYMBOL(spp2ascii);
 
 void ascii2spp(spp_address *addr, const char *buf)
 {
-    //ASCII -> SPP address conversion
+    /* TODO: ASCII -> SPP address conversion */
 }
 EXPORT_SYMBOL(ascii2spp);
 
