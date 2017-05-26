@@ -4,6 +4,8 @@
  * CCSDS Space Packet Protocol
  */
 
+#define pr_fmt(fmt) "SPP: " fmt
+
 #include <linux/capability.h>
 #include <linux/module.h>
 #include <linux/errno.h>
@@ -36,7 +38,7 @@
 int sysctl_spp_no_activity_timeout = SPP_DEFAULT_IDLE;
 int sysctl_spp_link_fail_timeout = SPP_DEFAULT_FAIL_TIMEOUT;
 
-/* This list is a list of ??? */
+/* This list is a list of sockets */
 HLIST_HEAD(spp_list);
 DEFINE_SPINLOCK(spp_list_lock); /* Create a spin lock for the list */
 
