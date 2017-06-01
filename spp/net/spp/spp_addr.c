@@ -52,4 +52,10 @@ int sppcmp(spp_address *addr1, spp_address *addr2)
 }
 EXPORT_SYMBOL(sppcmp);
 
+int sppval(spp_address *addr)
+{
+    /* TODO: validates an SPP address */
+}
+EXPORT_SYMBOL(sppval);
+
 /* TODO: Functions to handle headers and address */

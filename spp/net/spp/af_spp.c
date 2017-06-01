@@ -35,6 +35,9 @@
 #include <linux/init.h>
 #include <linux/spinlock.h>
 
+#include <net/spp.h>
+#include <net/compat.h>
+
 int sysctl_spp_no_activity_timeout = SPP_DEFAULT_IDLE;
 int sysctl_spp_link_fail_timeout = SPP_DEFAULT_FAIL_TIMEOUT;
 
@@ -199,7 +202,26 @@ static int spp_release(struct socket *sock)
  */
 static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 {
-    /* TODO: Implement socket bind */
+   struct sock *sk = sock->sk;
+   struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
+   int len, i, rc = 0;
+
+   if(!sock_flag(sk, SOCK_ZAPPED) ||
+           addr_len != sizeof(struct sockaddr_spp) ||
+           addr->sspp_family != AF_SPP) {
+            rc = -EINVAL;
+            goto out;
+   }
+   if(!sppval(addr->sspp_addr)){
+        rc = -EINVAL;
+        goto out;
+   }
+   lock_sock(sk);
+   spp_sk(sk)->s_addr = addr->sspp_addr;
+   spp_insert_socket(sk);
+   sock_reset_flag(sk, SOCK_ZAPPED);
+   release_sock(sk);
+   SOCK_DEBUG(sk, "spp_bind: socket is bound\n");
 }
 
 /*
@@ -207,7 +229,9 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
  */
 static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len, int flags)
 {
-    /* TODO: Implement socket connect */
+    struct sock *sk = sock->sk;
+    struct spp_sock *spp = spp_sk(sk);
+    struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
 }
 
 /*
