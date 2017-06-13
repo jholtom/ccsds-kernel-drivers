@@ -19,18 +19,6 @@
 #include <linux/mm.h>
 #include <linux/interrupt.h>
 
-/* Space Packet Address' are defined to be 11-bits long
- * Space Packet Address' can be from 0 to 2047 (decimal form)
- * 2032 to 2047 are reserved by CCSDS
- * The default address is:  11111010001 (2001 dec)
- * The null address is: 00000000000 (0 dec)
- * The idle address is: 11111111111 (2047 dec)
- */
-
-const spp_address spp_defaddr = {2001};
-const spp_address spp_nulladdr = {0};
-const spp_address spp_idleaddr = {2047};
-
 char *spp2ascii(char *buf, const spp_address *addr)
 {
     /* TODO: Generate a human readable version of this int (ASCII) */

@@ -228,7 +228,7 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
         sock->state = SS_CONNECTED;
         goto out;
     }
-    rc = -ECONNNREFUSED;
+    rc = -ECONNREFUSED;
     if (sk->sk_state == TCP_CLOSE && sock->state == SS_CONNECTING){
         sock->state == SS_UNCONNECTED;
         goto out;
@@ -375,12 +375,13 @@ static int spp_info_show(struct seq_file *seq, void *v)
         struct sock *s = sk_entry(v);
         struct spp_sock *spp = spp_sk(s);
         const char *devname, *address;
+        /*TODO: define dev */
         if (!dev)
             devname = "???";
         else
             devname = dev->name;
-
-        seq_printf(seq, "%-10s ", spp2ascii(rsbuf, &spp->d_addr)); /*Prints destination address */
+        spp2ascii(rsbuf, &spp->d_addr)
+        seq_printf(seq, "%-10s ", rsbuf); /*Prints destination address */
 
         seq_printf(seq, "%-10s %-5s %3.3X  %d  %d  %d  %d %3lu %3lu %3lu %3lu %3lu %3lu/%03lu %5d %5d %ld\n", spp2ascii(rsbuf, &spp->s_addr),
                 devname,
@@ -392,7 +393,7 @@ static int spp_info_show(struct seq_file *seq, void *v)
                 /* TODO: take care of timer prints here*/
                 sk_wmem_alloc_get(s),
                 sk_rmem_alloc_get(s), 
-                s->sk_socket ? SOCK_INDOE(s->sk_socket)->i_indo : 0L);
+                s->sk_socket ? SOCK_INODE(s->sk_socket)->i_inode : 0L);
 
     }
     return 0;
