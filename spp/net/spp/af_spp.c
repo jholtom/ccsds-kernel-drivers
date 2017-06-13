@@ -35,6 +35,9 @@
 #include <linux/init.h>
 #include <linux/spinlock.h>
 
+#include <net/spp.h>
+#include <net/compat.h>
+
 int sysctl_spp_no_activity_timeout = SPP_DEFAULT_IDLE;
 int sysctl_spp_link_fail_timeout = SPP_DEFAULT_FAIL_TIMEOUT;
 
@@ -199,6 +202,26 @@ static int spp_release(struct socket *sock)
  */
 static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 {
+   struct sock *sk = sock->sk;
+   struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
+   int len, i, rc = 0;
+
+   if(!sock_flag(sk, SOCK_ZAPPED) ||
+           addr_len != sizeof(struct sockaddr_spp) ||
+           addr->sspp_family != AF_SPP) {
+            rc = -EINVAL;
+            goto out;
+   }
+   if(!sppval(addr->sspp_addr)){
+        rc = -EINVAL;
+        goto out;
+   }
+   lock_sock(sk);
+   spp_sk(sk)->s_addr = addr->sspp_addr;
+   spp_insert_socket(sk);
+   sock_reset_flag(sk, SOCK_ZAPPED);
+   release_sock(sk);
+   SOCK_DEBUG(sk, "spp_bind: socket is bound\n");
     /* TODO: Implement socket bind */
 }
 
@@ -207,19 +230,67 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
  */
 static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len, int flags)
 {
-    /* TODO: Implement socket connect */
+    struct sock *sk = sock->sk;
+    struct spp_sock *spp = spp_sk(sk);
+    struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
+    int rc = 0;
+
+    lock_sock(sk);
+    if (sk->sk_state == TCP_ESTABLISHED && sock->state == SS_CONNECTING){
+        sock->state = SS_CONNECTED;
+        goto out;
+    }
+    rc = -ECONNNREFUSED;
+    if (sk->sk_state == TCP_COSE && sock->state == SS_CONNECTING){
+        sock->state == SS_UNCONNECTED;
+        goto out;
+    }
+    rc = -EISCONN;
+    if (sk->sk_state == TCP_ESTABLISHED)
+        goto out;
+
+    sk->sk_state = TCP_CLOSE;
+    sock->state = SS_UNCONNECTED;
+
+    rc = -EINVAL;
+    if (addr_len != sizeof(struct sockaddr_spp) || addr->sspp_family != AF_SPP)
+        goto out;
+
+    spp_limit_facilities(&spp->facilities); /* TODO: adjust for no routing */
+
+    rc = -EINVAL;
+    if (sock_flag(sk, SOCK_ZAPPED))
+        goto out;
+
+   if(!sppcmp(spp->s_addr, spp_nulladdr))
+       /*TODO: set spp->s_addr to null address */
+
+   spp->d_addr = addr->sspp_addr;
+   sock->state = SS_CONNECTING;
+   sk->sk_state = /* TODO: in connecting for no time at all, immediately shift to connected? */;
+
+   /* Start timeout... */
+   sock->state = SS_CONNECTED;
+   rc = 0;
+out:
+    release_sock(sk);
+    return rc;
 }
 
 /*
  * Accept incoming connection (create socket)
+ * TODO: complete implementation
  */
 static int spp_accept(struct socket *sock, struct socket *newsock, int flags)
 {
-    /* TODO: Implment incoming connections */
+    struct sock *sk = sock->sk;
+    struct sock *newsk;
+    struct sk_buff *skb;
+    int rc = -EINVAL;
 }
 
 /*
- * TODO: What is behavior???
+ * Socket Get Name: If peer and connected, set addr to d_addr, else, set to s_addr.  Also set AF and adjust address length
  */
 static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_len, int peer)
 {
@@ -244,10 +315,19 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     
    /* Check MSG length */
 
-   /* Check MSG flags */
+   lock_sock(sk);
+   /* Do some checks whether or not something is bad about the message */
+   if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_EOR|MSG_CMSG_COMPAT))
+        return -EINVAL;
+   /* Check whether or not the socket is zapped */
 
-    
-    
+   /* Check if pipe has shutdown */
+
+   /* Can't reach the other end? */
+
+   if(usspp != NULL) {
+        /* Do something */
+   }
 }
 
 /*
