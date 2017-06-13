@@ -1,4 +1,4 @@
-/* 
+/*
  * Public elements of the kernel SPP code.
  *
  * Jacob Holtom

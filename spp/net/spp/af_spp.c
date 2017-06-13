@@ -34,6 +34,7 @@
 #include <linux/sysctl.h>
 #include <linux/init.h>
 #include <linux/spinlock.h>
+#include <linux/tcp_states.h>
 #include <net/spp.h>
 
 int sysctl_spp_no_activity_timeout = SPP_DEFAULT_IDLE;
@@ -99,18 +100,20 @@ static void spp_destroy_timer(unsigned long data)
  * Handles setting options on a socket
  * Handles SPP specific socket options (and possibly socket level options too)
  */
-static int spp_setsockopt(struct socket *sock, int level, intoptname, char __user *optval, unsigned int optlen)
+static int spp_setsockopt(struct socket *sock, int level, int optname, char __user *optval, unsigned int optlen)
 {
     /* TODO: implement socket option setter */
+    return 0;
 }
 
 /*
  * Handles getting the current options of a socket
  * Handles SPP specific socket options (and possibly socket level options too)
  */
-static int spp_getsockopt(struct socket *sock, int level, intoptname, char __user *optval, unsigned int optlen)
+static int spp_getsockopt(struct socket *sock, int level, int optname, char __user *optval, unsigned int optlen)
 {
     /* TODO: implement socket option getter */
+    return 0;
 }
 
 /*
