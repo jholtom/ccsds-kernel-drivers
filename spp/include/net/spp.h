@@ -22,7 +22,7 @@ struct spp_entity {
 };
 
 struct spp_sock {
-    struct sock  sock;
+    struct sock sock;
     spp_address s_addr, d_addr;
     struct net_device *device;
     unsigned int lci, rand;
@@ -37,7 +37,7 @@ struct spp_sock {
 
 #define spp_sk(sk) ((struct spp_sock *)(sk))
 
-typedef struct spp_dev {
+struct spp_dev {
     struct spp_dev *next;
     struct net_device *dev;
 };
