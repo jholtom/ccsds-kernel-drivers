@@ -126,7 +126,7 @@ static int spp_listen(struct socket *sock, int backlog)
     if(sk->sk_state != TCP_LISTEN){ /* If it is not already in a listening state */
         struct spp_sock *spp = spp_sk(sk); /* Get the SPP specific representation */
 
-        memset(&spp->d_addr, 0, SPP_ADDR_LEN); /* TODO: should we really be setting it to 0? why memset, shouldn't we just reference the null_addr? */
+        memset(&spp->d_addr, 0, SPP_APID_LEN); /* TODO: should we really be setting it to 0? why memset, shouldn't we just reference the null_addr? */
         sk->sk_max_ack_backlog = backlog; /* Adjust backlog for acknowledgements (SPP technically doesn't have this)*/
         sk->sk_state = TCP_LISTEN; /* Set state into listen */
         return 0; /* We did it! */
