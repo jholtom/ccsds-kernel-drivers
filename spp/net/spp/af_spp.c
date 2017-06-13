@@ -62,21 +62,21 @@ static void spp_remove_sock(struct sock *sk)
  */
 static void spp_kill_by_device(struct net_device *dev)
 {
-    struct sock *s; /* Temporary Socket Pointer */
-    spin_lock_bh(&spp_list_lock); /* Acquire lock on socket list */
-    sk_for_each(s, &spp_list) { /* Iterate over sockets */
-        struct spp_sock *spp = spp_sk(s); /* Grab the SPP specific socket representation */
+    struct sock *s;
+    struct hlist_node *node;
+    write_lock_bh(&spp_list_lock);
+    sk_for_each(s, node, &spp_list){
+        struct spp_sock *spp = spp_sk(s);
         if(spp->device == dev){
-            spp_disconnect(s, ENETUNREACH,SPP_OUT_OF_ORDER,0); /* Terminate the socket with a NETWORK UNREACHABLE and OUT OF ORDER message */
-            /* TODO: Remove from routes */
-            spp->device = NULL; /* Terminate its representation by deassigning its device */
+            spp_disconnect(s, ENETUNREACH,SPP_OUT_OF_ORDER,0);
+            spp->device = NULL;
         }
     }
-    spin_unlock_bh(&spp_list_lock); /* Release socket list */
+    write_unlock_bh(&spp_list_lock);
 }
 
-/* 
- * Add a socket to the bound sockets list 
+/*
+ * Add a socket to the bound sockets list
  */
 static void spp_insert_socket(struct sock *sk)
 {
