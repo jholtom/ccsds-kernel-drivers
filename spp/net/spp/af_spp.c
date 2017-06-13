@@ -230,7 +230,7 @@ static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_l
  * Socket Send Message
  * TODO: Complete method with correct implementation
  */
-static int spp_sendmsg(struct socket *sock, struct msghdr *msg, size_t len)
+static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg, size_t len)
 {
    struct sock *sk = sock->sk;
    struct spp_sock *spp = spp_sk(sk); /* Get SPP specific socket representation */
@@ -240,19 +240,14 @@ static int spp_sendmsg(struct socket *sock, struct msghdr *msg, size_t len)
    struct sk_buff *skb; /* Socket buffer for message handling */
    unsigned char *asmptr;
    int n, size, qbit = 0;
+   /* Potentially need to bind socket here */
+    
+   /* Check MSG length */
 
-   /* Do some checks whether or not something is bad about the message */
-   if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_EOR|MSG_CMSG_COMPAT))
-        return -EINVAL;
-   /* Check whether or not the socket is zapped */
+   /* Check MSG flags */
 
-   /* Check if pipe has shutdown */
-
-   /* Can't reach the other end? */
-
-   if(usspp != NULL) {
-        /* Do something */
-   }
+    
+    
 }
 
 /*
