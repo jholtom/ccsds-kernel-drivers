@@ -17,9 +17,6 @@
 
 #define SPP_OUT_OF_ORDER 0
 
-#define SPP_DEFAULT_IDLE 300 /* TODO: Decide on an idle timeout, 5 minutes, or 300s is probably appropriate */
-#define SPP_DEFAULT_FAIL_TIMEOUT 30 /* TODO: decide on this fail timeout */
-
 struct spp_entity {
 /* An end of the connection - May not need because we have no true 'routing' support */
 };
@@ -31,10 +28,10 @@ struct spp_sock {
     unsigned int lci, rand;
     unsigned char state, condition, qbitincl, defer;
     unsigned char cause, diagnostic;
-#ifdef M_BIT
-    unsigned short  fraglen;
-    struct sk_buff_head     frag_queue;
-#endif
+    struct sk_buff_head ack_queue;
+    struct sk_buff_head fragment_queue;
+    struct sk_buff_head interrupt_in_queue;
+    struct sk_buff_head interrupt_out_queue;
     struct spp_facilities_struct facilities;
 };
 
@@ -43,4 +40,4 @@ struct spp_sock {
 typedef struct spp_dev {
     struct spp_dev *next;
     struct net_device *dev;
-}
+};

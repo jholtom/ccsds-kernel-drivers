@@ -37,9 +37,6 @@
 #include <net/tcp_states.h>
 #include <net/spp.h>
 
-int sysctl_spp_no_activity_timeout = SPP_DEFAULT_IDLE;
-int sysctl_spp_link_fail_timeout = SPP_DEFAULT_FAIL_TIMEOUT;
-
 /* This list is a list of sockets */
 HLIST_HEAD(spp_list);
 DEFINE_SPINLOCK(spp_list_lock); /* Create a spin lock for the list */
@@ -162,9 +159,7 @@ static int spp_create(struct net *net, struct socket *sock, int protocol, int ke
     spp = spp_sk(sk);
     sock_init_data(sock, sk);
 
-    init_timer(&spp->timer);
-    init_timer(&spp->idletimer);
-    /* TODO: rewrite so that it actually adjusts all the appropriate things */ 
+    /* TODO: rewrite so that it actually adjusts all the appropriate things/flags */
 
     return 0;
 }
