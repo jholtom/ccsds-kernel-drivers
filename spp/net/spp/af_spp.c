@@ -34,9 +34,7 @@
 #include <linux/sysctl.h>
 #include <linux/init.h>
 #include <linux/spinlock.h>
-
 #include <net/spp.h>
-#include <net/compat.h>
 
 int sysctl_spp_no_activity_timeout = SPP_DEFAULT_IDLE;
 int sysctl_spp_link_fail_timeout = SPP_DEFAULT_FAIL_TIMEOUT;

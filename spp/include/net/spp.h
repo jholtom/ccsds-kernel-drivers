@@ -15,9 +15,8 @@
 #define SPP_HEADER_LEN 32 /* 32 bit header length */
 #define SPP_APID_LEN 11 /* 11 bit APID length */
 
-#define SPP_DEFAULT_IDLE
-#define SPP_DEFAULT_FAIL_TIMEOUT
-#define SPP_DEFAULT_WINDOW_SIZE
+#define SPP_DEFAULT_IDLE 300 /* TODO: Decide on an idle timeout, 5 minutes, or 300s is probably appropriate */
+#define SPP_DEFAULT_FAIL_TIMEOUT 30 /* TODO: decide on this fail timeout */
 
 struct spp_entity {
 /* An end of the connection - May not need because we have no true 'routing' support */
