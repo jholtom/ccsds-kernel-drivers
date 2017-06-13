@@ -34,7 +34,7 @@
 #include <linux/sysctl.h>
 #include <linux/init.h>
 #include <linux/spinlock.h>
-#include <linux/tcp_states.h>
+#include <net/tcp_states.h>
 #include <net/spp.h>
 
 int sysctl_spp_no_activity_timeout = SPP_DEFAULT_IDLE;
