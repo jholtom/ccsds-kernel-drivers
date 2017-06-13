@@ -187,30 +187,30 @@ static int spp_release(struct socket *sock)
  */
 static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 {
-   struct sock *sk = sock->sk;
-   struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
-   int len, i, rc = 0;
+    struct sock *sk = sock->sk;
+    struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
+    int len, i, rc = 0;
 
-   if(!sock_flag(sk, SOCK_ZAPPED) ||
-           addr_len != sizeof(struct sockaddr_spp) ||
-           addr->sspp_family != AF_SPP) {
-            rc = -EINVAL;
-            goto out;
-   }
-   if(!sppval(addr->sspp_addr)){
+    if(!sock_flag(sk, SOCK_ZAPPED) ||
+            addr_len != sizeof(struct sockaddr_spp) ||
+            addr->sspp_family != AF_SPP) {
         rc = -EINVAL;
         goto out;
-   }
-   lock_sock(sk);
-   spp_sk(sk)->s_addr = addr->sspp_addr;
-   spp_insert_socket(sk);
-   sock_reset_flag(sk, SOCK_ZAPPED);
-   release_sock(sk);
-   SOCK_DEBUG(sk, "spp_bind: socket is bound\n");
+    }
+    if(!sppval(addr->sspp_addr)){
+        rc = -EINVAL;
+        goto out;
+    }
+    lock_sock(sk);
+    spp_sk(sk)->s_addr = addr->sspp_addr;
+    spp_insert_socket(sk);
+    sock_reset_flag(sk, SOCK_ZAPPED);
+    release_sock(sk);
+    SOCK_DEBUG(sk, "spp_bind: socket is bound\n");
     /* TODO: Implement socket bind */
 
 out:
-   return rc;
+    return rc;
 }
 
 /*
@@ -229,7 +229,7 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
         goto out;
     }
     rc = -ECONNNREFUSED;
-    if (sk->sk_state == TCP_COSE && sock->state == SS_CONNECTING){
+    if (sk->sk_state == TCP_CLOSE && sock->state == SS_CONNECTING){
         sock->state == SS_UNCONNECTED;
         goto out;
     }
@@ -250,16 +250,16 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
     if (sock_flag(sk, SOCK_ZAPPED))
         goto out;
 
-   if(!sppcmp(spp->s_addr, spp_nulladdr))
-       /*TODO: set spp->s_addr to null address */
+    if(!sppcmp(spp->s_addr, spp_nulladdr))
+        /*TODO: set spp->s_addr to null address */
 
-   spp->d_addr = addr->sspp_addr;
-   sock->state = SS_CONNECTING;
-   sk->sk_state = /* TODO: in connecting for no time at all, immediately shift to connected? */;
+        spp->d_addr = addr->sspp_addr;
+    sock->state = SS_CONNECTING;
+    sk->sk_state = /* TODO: in connecting for no time at all, immediately shift to connected? */;
 
-   /* Start timeout... */
-   sock->state = SS_CONNECTED;
-   rc = 0;
+    /* Start timeout... */
+    sock->state = SS_CONNECTED;
+    rc = 0;
 out:
     release_sock(sk);
     return rc;
@@ -291,31 +291,31 @@ static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_l
  */
 static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg, size_t len)
 {
-   struct sock *sk = sock->sk;
-   struct spp_sock *spp = spp_sk(sk); /* Get SPP specific socket representation */
-   DECLARE_SOCKADDR(struct sockaddr_spp *, usspp, msg->msg_name); /* Use this macro to do x,y,y */
-   int err; /* Error flag */
-   struct sockaddr_spp sspp; /* Temporary addressing struct */
-   struct sk_buff *skb; /* Socket buffer for message handling */
-   unsigned char *asmptr;
-   int n, size, qbit = 0;
-   /* Potentially need to bind socket here */
-    
-   /* Check MSG length */
+    struct sock *sk = sock->sk;
+    struct spp_sock *spp = spp_sk(sk); /* Get SPP specific socket representation */
+    DECLARE_SOCKADDR(struct sockaddr_spp *, usspp, msg->msg_name); /* Use this macro to do x,y,y */
+    int err; /* Error flag */
+    struct sockaddr_spp sspp; /* Temporary addressing struct */
+    struct sk_buff *skb; /* Socket buffer for message handling */
+    unsigned char *asmptr;
+    int n, size, qbit = 0;
+    /* Potentially need to bind socket here */
 
-   lock_sock(sk);
-   /* Do some checks whether or not something is bad about the message */
-   if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_EOR|MSG_CMSG_COMPAT))
+    /* Check MSG length */
+
+    lock_sock(sk);
+    /* Do some checks whether or not something is bad about the message */
+    if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_EOR|MSG_CMSG_COMPAT))
         return -EINVAL;
-   /* Check whether or not the socket is zapped */
+    /* Check whether or not the socket is zapped */
 
-   /* Check if pipe has shutdown */
+    /* Check if pipe has shutdown */
 
-   /* Can't reach the other end? */
+    /* Can't reach the other end? */
 
-   if(usspp != NULL) {
+    if(usspp != NULL) {
         /* Do something */
-   }
+    }
 }
 
 /*
@@ -343,15 +343,19 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
     void __user *argp = (void __user *)arg;
+    int rc;
 
     switch (cmd) {
-    case :
-    case :
-
-    default:
-        return -ENOIOCTLCMD;
+        case TIOCOUTQ:
+            break;
+        case TIOCINQ:
+            break;
+        default:
+            return -ENOIOCTLCMD;
+            break;
     }
-    return 0;
+    unlock_kernel();
+    return rc;
 }
 
 #ifdef CONFIG_PROC_FS
@@ -366,7 +370,7 @@ static int spp_info_show(struct seq_file *seq, void *v)
     char buf[11], rsbuf[11];
 
     if(v == SEQ_START_TOKEN)
-	    seq_puts(seq, "dest_addr  src_addr  dev   lci  st vs vr va   t  t1  t2  t3  hb    idle Snd-Q Rcv-Q inode\n"); /* Check formatting as it applies to the rest of my prints */
+        seq_puts(seq, "dest_addr  src_addr  dev   lci  st vs vr va   t  t1  t2  t3  hb    idle Snd-Q Rcv-Q inode\n"); /* Check formatting as it applies to the rest of my prints */
     else {
         struct sock *s = sk_entry(v);
         struct spp_sock *spp = spp_sk(s);
@@ -376,19 +380,19 @@ static int spp_info_show(struct seq_file *seq, void *v)
         else
             devname = dev->name;
 
-	 seq_printf(seq, "%-10s ", spp2ascii(rsbuf, &spp->d_addr)); /*Prints destination address */
-         
-         seq_printf(seq, "%-10s %-5s %3.3X  %d  %d  %d  %d %3lu %3lu %3lu %3lu %3lu %3lu/%03lu %5d %5d %ld\n", spp2ascii(rsbuf, &spp->s_addr),
-                 devname,
-                 spp->lci & 0x0FFF,
-                 spp->state,
-                 spp->vs,
-                 spp->vr,
-                 spp->va,
-                 /* TODO: take care of timer prints here*/
-                 sk_wmem_alloc_get(s),
-                 sk_rmem_alloc_get(s), 
-                 s->sk_socket ? SOCK_INDOE(s->sk_socket)->i_indo : 0L);
+        seq_printf(seq, "%-10s ", spp2ascii(rsbuf, &spp->d_addr)); /*Prints destination address */
+
+        seq_printf(seq, "%-10s %-5s %3.3X  %d  %d  %d  %d %3lu %3lu %3lu %3lu %3lu %3lu/%03lu %5d %5d %ld\n", spp2ascii(rsbuf, &spp->s_addr),
+                devname,
+                spp->lci & 0x0FFF,
+                spp->state,
+                spp->vs,
+                spp->vr,
+                spp->va,
+                /* TODO: take care of timer prints here*/
+                sk_wmem_alloc_get(s),
+                sk_rmem_alloc_get(s), 
+                s->sk_socket ? SOCK_INDOE(s->sk_socket)->i_indo : 0L);
 
     }
     return 0;
@@ -503,14 +507,14 @@ static int __init spp_init(void)
 {
     int i;
     int rc;
-    
+
     rc = proto_register(&spp_proto, 0);
-    
+
     if( rc != 0)
         goto out;
-    
+
     spp_addr = spp_nulladdr; /* TODO: Ensure I'm setting the right global and create a null SPP address */
-    
+
     sock_register(&spp_family_ops);
     register_netdevice_notifier(&spp_dev_notifier);
 
@@ -541,7 +545,7 @@ MODULE_ALIAS_NETPROTO(PF_SPP);
 static void __exit spp_exit(void)
 {
     remove_proc_entry() //Probably only need one to kill the family
-    unregister_netdevice_notifier(&spp_dev_notifier);
+        unregister_netdevice_notifier(&spp_dev_notifier);
     //Unregister sysctl parts
 
     dev_remove_pack(&spp_packet_type);
