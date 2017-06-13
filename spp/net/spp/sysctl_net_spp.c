@@ -8,6 +8,9 @@ static int min_window[] = {1}, max_window = {7}; //Based on ROSE protocol, may n
 
 static struct ctl_table_header *spp_table_header;
 
+/*TODO: no more window size */
+/*TODO: either remove, or add something that actually can use a sysctl */
+
 static struct ctl_table spp_table[] = {
     {
         .procname = "window_size",

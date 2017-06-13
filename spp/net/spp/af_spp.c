@@ -535,24 +535,22 @@ out:
 }
 module_init(spp_init);
 
-MODULE_AUTHOR("Jacob Holtom <jacob@holtom.me>");
-MODULE_DESCRIPTION("The CCSDS Space Packet Protocol");
-MODULE_LICENSE("GPL");
-MODULE_ALIAS_NETPROTO(PF_SPP);
-
-/* 
+/*
  * Called on module_exit, removes SPP from kernel
  */
 static void __exit spp_exit(void)
 {
-    remove_proc_entry() //Probably only need one to kill the family
-        unregister_netdevice_notifier(&spp_dev_notifier);
-    //Unregister sysctl parts
-
+    remove_proc_entry("socket", x25_proc_dir);
+    remove_proc_entry("spp", init_net.proc_net);
+    unregister_sysctl_table(spp_table_header);
+    unregister_netdevice_notifier(&spp_dev_notifier);
     dev_remove_pack(&spp_packet_type);
     sock_unregister(PF_SPP);
     proto_unregister(&spp_proto);
-
-    /* TODO: Any other free()'s */
 }
 module_exit(spp_exit);
+
+MODULE_AUTHOR("Jacob Holtom <jacob@holtom.me>");
+MODULE_DESCRIPTION("The CCSDS Space Packet Protocol");
+MODULE_LICENSE("GPL");
+MODULE_ALIAS_NETPROTO(PF_SPP);
