@@ -36,6 +36,6 @@ struct spp_facilities_struct {
  * The idle address is: 11111111111 (2047 dec)
  */
 
-static const struct spp_address spp_defaddr = {2001};
-static const struct spp_address spp_nulladdr = {0};
-static const struct spp_address spp_idleaddr = {2047};
+static const spp_address spp_defaddr = {2001};
+static const spp_address spp_nulladdr = {0};
+static const spp_address spp_idleaddr = {2047};
