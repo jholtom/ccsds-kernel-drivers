@@ -15,10 +15,13 @@ typedef struct {
 /* May need to add TM/TC parameter here, 1 bit flag */
 
 struct sockaddr_spp {
-    __kernel_sa_family_t sspp_family;
+    sa_family_t sspp_family;
     spp_address sspp_addr;
 };
 
+/* Facilities Structure
+ * Totally unsure of what this actually does
+ */
 struct spp_facilities_struct {
     spp_address s_addr, d_addr;
     unsigned int rand;
