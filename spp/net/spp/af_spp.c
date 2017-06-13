@@ -232,6 +232,48 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
     struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
+    int rc = 0;
+
+    lock_sock(sk);
+    if (sk->sk_state == TCP_ESTABLISHED && sock->state == SS_CONNECTING){
+        sock->state = SS_CONNECTED;
+        goto out;
+    }
+    rc = -ECONNNREFUSED;
+    if (sk->sk_state == TCP_COSE && sock->state == SS_CONNECTING){
+        sock->state == SS_UNCONNECTED;
+        goto out;
+    }
+    rc = -EISCONN;
+    if (sk->sk_state == TCP_ESTABLISHED)
+        goto out;
+
+    sk->sk_state = TCP_CLOSE;
+    sock->state = SS_UNCONNECTED;
+
+    rc = -EINVAL;
+    if (addr_len != sizeof(struct sockaddr_spp) || addr->sspp_family != AF_SPP)
+        goto out;
+
+    spp_limit_facilities(&spp->facilities); /* TODO: adjust for no routing */
+
+    rc = -EINVAL;
+    if (sock_flag(sk, SOCK_ZAPPED))
+        goto out;
+
+   if(!sppcmp(spp->s_addr, spp_nulladdr))
+       /*TODO: set spp->s_addr to null address */
+
+   spp->d_addr = addr->sspp_addr;
+   sock->state = SS_CONNECTING;
+   sk->sk_state = /* TODO: in connecting for no time at all, immediately shift to connected? */;
+
+   /* Start timeout... */
+   sock->state = SS_CONNECTED;
+   rc = 0;
+out:
+    release_sock(sk);
+    return rc;
 }
 
 /*
@@ -239,11 +281,14 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
  */
 static int spp_accept(struct socket *sock, struct socket *newsock, int flags)
 {
-    /* TODO: Implment incoming connections */
+    struct sock *sk = sock->sk;
+    struct sock *newsk;
+    struct sk_buff *skb;
+    int rc = -EINVAL;
 }
 
 /*
- * TODO: What is behavior???
+ * Socket Get Name: If peer and connected, set addr to d_addr, else, set to s_addr.  Also set AF and adjust address length
  */
 static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_len, int peer)
 {
@@ -265,6 +310,7 @@ static int spp_sendmsg(struct socket *sock, struct msghdr *msg, size_t len)
    unsigned char *asmptr;
    int n, size, qbit = 0;
 
+   lock_sock(sk);
    /* Do some checks whether or not something is bad about the message */
    if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_EOR|MSG_CMSG_COMPAT))
         return -EINVAL;
