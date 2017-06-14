@@ -41,3 +41,15 @@ struct spp_dev {
     struct spp_dev *next;
     struct net_device *dev;
 };
+
+/* af_spp.c */
+
+/* spp_addr.c */
+
+/* spp_loopback.c */
+
+/* spp_methods.c */
+
+/* spp_out.c */
+
+/* sysctl_net_spp.c */
