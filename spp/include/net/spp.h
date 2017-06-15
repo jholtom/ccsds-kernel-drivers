@@ -41,6 +41,9 @@ struct spp_dev {
     struct net_device *dev;
 };
 
+extern struct hlist_head spp_list;
+extern rwlock_t spp_list_lock;
+
 /* af_spp.c */
 
 /* spp_addr.c */
@@ -55,4 +58,7 @@ extern void spp_disconnect(struct sock *sk, int reason, unsigned char cause, uns
 extern int spp_kiss_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev);
 /* spp_out.c */
 
+/* spp_proc.c */
+extern int spp_proc_init(void);
+extern void spp_proc_exit(void);
 /* sysctl_net_spp.c */
