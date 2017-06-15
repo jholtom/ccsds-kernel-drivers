@@ -20,11 +20,11 @@ void spp_clear_queues(struct sock *sk)
 }
 
 void spp_disconnect(struct sock *sk, int reason, unsigned char cause, unsigned char diagnostic){
-    struct spp_sock *spp = spp_sock(sk);
+    struct spp_sock *spp = spp_sk(sk);
     spp_clear_queues(sk);
 
-    spp->causediag.cause = cause;
-    spp->causediag.diagnostic = diagnostic;
+    spp->cause = cause;
+    spp->diagnostic = diagnostic;
 
     sk->sk_state = TCP_CLOSE;
     sk->sk_err = reason;
