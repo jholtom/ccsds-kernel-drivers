@@ -48,7 +48,7 @@ struct spp_dev {
 extern char *spp2ascii(char *buf, const spp_address *addr);
 extern void asii2spp(spp_address *addr, const char *buf);
 extern int sppcmp(spp_address *addr1, spp_address *addr2);
-extern int sppval(spp_address *addr);
+extern int sppval(struct spp_address *addr);
 /* spp_loopback.c */
 
 /* spp_methods.c */

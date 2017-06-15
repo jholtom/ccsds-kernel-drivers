@@ -244,8 +244,6 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
     if (addr_len != sizeof(struct sockaddr_spp) || addr->sspp_family != AF_SPP)
         goto out;
 
-    spp_limit_facilities(&spp->facilities); /* TODO: adjust for no routing */
-
     rc = -EINVAL;
     if (sock_flag(sk, SOCK_ZAPPED))
         goto out;
