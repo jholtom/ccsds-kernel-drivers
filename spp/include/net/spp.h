@@ -15,6 +15,8 @@
 #define SPP_HEADER_LEN 32 /* 32 bit header length */
 #define SPP_APID_LEN 11 /* 11 bit APID length */
 
+#define SPP_DEFAULT_IDLE (180 * HZ) 
+
 #define SPP_OUT_OF_ORDER 0
 
 struct spp_entity {
@@ -46,7 +48,7 @@ extern struct hlist_head spp_list;
 extern spinlock_t spp_list_lock;
 
 /* af_spp.c */
-
+extern int sysctl_spp_idle_timer;
 /* spp_addr.c */
 extern char * spp2ascii(char *buf, const spp_address *addr);
 extern void asii2spp(spp_address *addr, const char *buf);

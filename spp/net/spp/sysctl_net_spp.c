@@ -4,22 +4,20 @@
 #include <linux/init.h>
 #include <net/spp.h>
 
-static int min_window[] = {1}, max_window = {7}; //Based on ROSE protocol, may need to change
+static int min_timer[] = {1 * HZ };
+static int max_timer[] = {300 * HZ};
 
 static struct ctl_table_header *spp_table_header;
 
-/*TODO: no more window size */
-/*TODO: either remove, or add something that actually can use a sysctl */
-
 static struct ctl_table spp_table[] = {
     {
-        .procname = "window_size",
-        .data = &sysctl_spp_window_size,
+        .procname = "idle_timer",
+        .data = &sysctl_spp_idle_timer,
         .maxlen = sizeof(int),
         .mode = 0644,
         .proc_handler = proc_dointvec_minmax,
-        .extra1 = &min_window,
-        .extra2 = &max_window
+        .extra1 = &min_timer,
+        .extra2 = &max_timer,
     },
     { }
 };

@@ -37,6 +37,8 @@
 #include <net/tcp_states.h>
 #include <net/spp.h>
 
+int sysctl_spp_idle_timer = SPP_DEFAULT_IDLE;
+
 /* This list is a list of sockets */
 HLIST_HEAD(spp_list);
 DEFINE_SPINLOCK(spp_list_lock); /* Create a spin lock for the list */
