@@ -40,7 +40,7 @@ int sppcmp(spp_address *addr1, spp_address *addr2)
 }
 EXPORT_SYMBOL(sppcmp);
 
-int sppval(struct spp_address *addr)
+int sppval(spp_address *addr)
 {
     /* TODO: Implement validation method */
     return 0;
