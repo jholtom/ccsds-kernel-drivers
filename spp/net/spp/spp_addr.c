@@ -22,6 +22,7 @@
 char * spp2ascii(char *buf, const spp_address *addr)
 {
     /* TODO: Generate a human readable version of this int (ASCII) */
+    return "2001";
 }
 EXPORT_SYMBOL(spp2ascii);
 
