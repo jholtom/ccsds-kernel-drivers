@@ -19,13 +19,13 @@
 #include <linux/mm.h>
 #include <linux/interrupt.h>
 
-char *spp2ascii(char *buf, const spp_address addr)
+char * spp2ascii(char *buf, const spp_address *addr)
 {
     /* TODO: Generate a human readable version of this int (ASCII) */
 }
 EXPORT_SYMBOL(spp2ascii);
 
-void ascii2spp(spp_address addr, const char *buf)
+void ascii2spp(spp_address *addr, const char *buf)
 {
     /* TODO: ASCII -> SPP address conversion */
 }
@@ -40,7 +40,7 @@ int sppcmp(spp_address *addr1, spp_address *addr2)
 }
 EXPORT_SYMBOL(sppcmp);
 
-int sppval(spp_address addr)
+int sppval(spp_address *addr)
 {
     /* TODO: Implement validation method */
     return 0;

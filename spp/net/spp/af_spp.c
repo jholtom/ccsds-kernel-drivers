@@ -248,7 +248,7 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
     if (sock_flag(sk, SOCK_ZAPPED))
         goto out;
 
-    if(!sppcmp(spp->s_addr, spp_nulladdr))
+    if(!sppcmp(&(spp->s_addr), &spp_nulladdr))
         /*TODO: set spp->s_addr to null address */
         spp->d_addr = addr->sspp_addr;
 
