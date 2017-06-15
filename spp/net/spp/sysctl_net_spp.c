@@ -22,11 +22,17 @@ static struct ctl_table spp_table[] = {
     { }
 };
 
+static struct ctl_path spp_path[] = {
+    { .procname = "net", },
+    { .procname = "spp", },
+    { }
+};
+
 void __init spp_register_sysctl(void)
 {
-    spp_table_header = register_net_sysctl(&init_net, "net/spp", spp_table);
+    spp_table_header = register_sysctl_paths(spp_path, spp_table);
 }
 void spp_unregister_sysctl(void)
 {
-    unregister_net_sysctl_table(spp_table_header);
+    unregister_sysctl_table(spp_table_header);
 }
