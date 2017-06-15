@@ -19,3 +19,8 @@ if(!sock_flag(sk, SOCK_DEAD)){
     sock_set_flag(sk, SOCK_DEAD);
 }
 }
+
+int spp_kiss_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev)
+{
+    return 0;
+}

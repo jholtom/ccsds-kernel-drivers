@@ -15,3 +15,8 @@
     #define PF_SPP AF_SPP
     ```
     - I also adjust AF_MAX to be 38.
+- Acquire ETH_P_SPP in <linux/if_ether.h>
+    - In the meantime, you can just go add your own again, I've been using this snippet
+    ```
+    #define ETH_P_SPP 0x0807 /* CCSDS SPP */
+    ```

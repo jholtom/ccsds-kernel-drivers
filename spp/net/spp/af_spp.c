@@ -353,7 +353,6 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
             return -ENOIOCTLCMD;
             break;
     }
-    unlock_kernel();
     return rc;
 }
 
@@ -381,7 +380,7 @@ static const struct proto_ops spp_proto_ops = {
     .poll = datagram_poll,
     .ioctl = spp_ioctl,
     .listen = spp_listen,
-    .shutdown = spp_shutdown,
+    .shutdown = sock_no_shutdown,
     .setsockopt = spp_setsockopt,
     .getsockopt = spp_getsockopt,
     .sendmsg = spp_sendmsg,
@@ -410,32 +409,36 @@ static struct notifier_block spp_dev_notifier = {
  */
 static int __init spp_init(void)
 {
-    int i;
     int rc;
-
     rc = proto_register(&spp_proto, 0);
 
     if( rc != 0)
         goto out;
+    rc = sock_register(&spp_family_ops);
+    if(rc != 0)
+        goto out_proto;
 
-    spp_addr = spp_nulladdr; /* TODO: Ensure I'm setting the right global and create a null SPP address */
+    dev_add_pack(&spp_packet_type);
 
-    sock_register(&spp_family_ops);
-    register_netdevice_notifier(&spp_dev_notifier);
+    rc = register_netdevice_notifier(&spp_dev_notifier);
+    if(rc != 0)
+        goto out_sock;
 
-    spp_register_pid(&spp_pid); /*TODO: I don't think I need this, ensure I don't, then remove */
-    spp_linkfail_register(&spp_linkfail_notifier); /* TODO: Probably need, but check */
-
-#ifdef CONFIG_SYSCTL
+    printk(KERN_INFO "SPP For Linux Version 0.1\n");
     spp_register_sysctl();
-#endif
-    spp_loopback_init(); /* TODO: May not need a loopback as we have no routing */
-
-    proc_create("spp", S_IRUGO, init_net.proc_net, &spp_info_fops);
-    proc_create("spp_entities", S_IRUGO, init_net.proc_net, &spp_nodes_fops);
+    rc = spp_proc_init();
+    if(rc != 0)
+        goto out_dev;
 
 out:
     return rc;
+out_dev:
+    unregister_netdevice_notifier(&spp_dev_notifier);
+out_sock:
+    sock_unregister(AF_SPP);
+out_proto:
+    proto_unregister(&spp_proto);
+    goto out;
 }
 module_init(spp_init);
 
@@ -444,8 +447,7 @@ module_init(spp_init);
  */
 static void __exit spp_exit(void)
 {
-    remove_proc_entry("socket", spp_proc_dir);
-    remove_proc_entry("spp", init_net.proc_net);
+    spp_proc_exit();
     unregister_sysctl_table(spp_table_header);
     unregister_netdevice_notifier(&spp_dev_notifier);
     dev_remove_pack(&spp_packet_type);

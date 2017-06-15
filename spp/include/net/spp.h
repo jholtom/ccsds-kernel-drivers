@@ -32,7 +32,6 @@ struct spp_sock {
     struct sk_buff_head fragment_queue;
     struct sk_buff_head interrupt_in_queue;
     struct sk_buff_head interrupt_out_queue;
-    struct spp_facilities_struct facilities;
 };
 
 #define spp_sk(sk) ((struct spp_sock *)(sk))
@@ -53,6 +52,7 @@ extern int sppval(spp_address *addr);
 
 /* spp_methods.c */
 extern void spp_disconnect(struct sock *sk, int reason, unsigned char cause, unsigned char diagnostic);
+extern int spp_kiss_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev);
 /* spp_out.c */
 
 /* sysctl_net_spp.c */
