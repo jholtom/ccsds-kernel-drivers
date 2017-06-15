@@ -250,10 +250,10 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
 
     if(!sppcmp(spp->s_addr, spp_nulladdr))
         /*TODO: set spp->s_addr to null address */
-
         spp->d_addr = addr->sspp_addr;
+
     sock->state = SS_CONNECTING;
-    sk->sk_state = /* TODO: in connecting for no time at all, immediately shift to connected? */;
+    sk->sk_state = SS_CONNECTED;/* TODO: in connecting for no time at all, immediately shift to connected? */;
 
     /* Start timeout... */
     sock->state = SS_CONNECTED;
