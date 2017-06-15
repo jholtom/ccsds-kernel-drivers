@@ -24,7 +24,7 @@ found:
 static void *spp_seq_socket_start(struct seq_file *seq, loff_t *pos) __acquires(spp_list_lock)
 {
     loff_t l = *pos;
-    read_lock_bh(&spp_list_lock);
+    spin_lock_bh(&spp_list_lock);
     return l ? spp_get_socket_idx(--l) : SEQ_START_TOKEN;
 }
 static void *spp_seq_socket_next(struct seq_file *seq, void *v, loff_t *pos)
@@ -42,7 +42,7 @@ out:
 }
 static void spp_seq_socket_stop(struct seq_file *seq, void *v) __releases(spp_list_lock)
 {
-    read_unlock_bh(&spp_list_lock);
+    spin_unlock_bh(&spp_list_lock);
 }
 static int spp_seq_socket_show(struct seq_file *seq, void *v)
 {

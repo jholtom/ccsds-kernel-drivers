@@ -39,7 +39,7 @@
 
 /* This list is a list of sockets */
 HLIST_HEAD(spp_list);
-DEFINE_RWLOCK(spp_list_lock); /* Create a spin lock for the list */
+DEFINE_SPINLOCK(spp_list_lock); /* Create a spin lock for the list */
 
 spp_address spp_addr; /* Current address of the local entity */
 

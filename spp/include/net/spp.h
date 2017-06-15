@@ -42,7 +42,7 @@ struct spp_dev {
 };
 
 extern struct hlist_head spp_list;
-extern rwlock_t spp_list_lock;
+extern spinlock_t spp_list_lock;
 
 /* af_spp.c */
 
