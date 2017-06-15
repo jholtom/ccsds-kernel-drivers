@@ -62,3 +62,10 @@ extern int spp_kiss_rcv(struct sk_buff *skb, struct net_device *dev, struct pack
 extern int spp_proc_init(void);
 extern void spp_proc_exit(void);
 /* sysctl_net_spp.c */
+#ifdef CONFIG_SYSCTL
+extern void spp_register_sysctl(void);
+extern void spp_unregister_sysctl(void);
+#else
+static inline void spp_register_sysctl(void){};
+static inline void spp_unregister_sysctl(void){};
+#endif

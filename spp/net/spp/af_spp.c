@@ -448,7 +448,7 @@ module_init(spp_init);
 static void __exit spp_exit(void)
 {
     spp_proc_exit();
-    unregister_sysctl_table(spp_table_header);
+    spp_unregister_sysctl();
     unregister_netdevice_notifier(&spp_dev_notifier);
     dev_remove_pack(&spp_packet_type);
     sock_unregister(PF_SPP);
