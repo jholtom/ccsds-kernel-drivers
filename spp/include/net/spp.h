@@ -28,10 +28,11 @@ struct spp_sock {
     unsigned int lci, rand;
     unsigned char state, condition, qbitincl, defer;
     unsigned char cause, diagnostic;
-    struct sk_buff_head ack_queue;
     struct sk_buff_head fragment_queue;
     struct sk_buff_head interrupt_in_queue;
     struct sk_buff_head interrupt_out_queue;
+    unsigned long idle_timer;
+    struct timer_list timer;
 };
 
 #define spp_sk(sk) ((struct spp_sock *)(sk))
