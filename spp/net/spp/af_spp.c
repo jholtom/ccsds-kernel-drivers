@@ -197,7 +197,7 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
         rc = -EINVAL;
         goto out;
     }
-    if(!sppval(addr->sspp_addr)){
+    if(!sppval(&(addr->sspp_addr))){
         rc = -EINVAL;
         goto out;
     }
@@ -248,7 +248,8 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
     if (sock_flag(sk, SOCK_ZAPPED))
         goto out;
 
-    if(!sppcmp(&(spp->s_addr), &spp_nulladdr))
+    spp_address spp_null = spp_nulladdr; 
+    if(!sppcmp(&(spp->s_addr), &spp_null))
         /*TODO: set spp->s_addr to null address */
         spp->d_addr = addr->sspp_addr;
 

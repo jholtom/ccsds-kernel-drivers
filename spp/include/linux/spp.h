@@ -19,15 +19,6 @@ struct sockaddr_spp {
     spp_address sspp_addr;
 };
 
-/* Facilities Structure
- * Totally unsure of what this actually does
- */
-struct spp_facilities_struct {
-    spp_address s_addr, d_addr;
-    unsigned int rand;
-    spp_address fail_addr;
-};
-
 /* Space Packet Address' are defined to be 11-bits long
  * Space Packet Address' can be from 0 to 2047 (decimal form)
  * 2032 to 2047 are reserved by CCSDS

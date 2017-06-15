@@ -31,7 +31,7 @@ void ascii2spp(spp_address *addr, const char *buf)
 }
 EXPORT_SYMBOL(ascii2spp);
 
-int sppcmp(spp_address *addr1, spp_address *addr2)
+int sppcmp(const spp_address *addr1, const spp_address *addr2)
 {
     if(addr1->spp_apid == addr2->spp_apid)
         return 0;
@@ -40,7 +40,7 @@ int sppcmp(spp_address *addr1, spp_address *addr2)
 }
 EXPORT_SYMBOL(sppcmp);
 
-int sppval(spp_address *addr)
+int sppval(const spp_address *addr)
 {
     /* TODO: Implement validation method */
     return 0;
