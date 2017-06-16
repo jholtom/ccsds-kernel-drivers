@@ -9,7 +9,7 @@
 #define SPP_MTU 65535 /* can be max length of 64K */
 
 typedef struct {
-    int spp_apid : 11; /* 11 bit APID */
+    unsigned int spp_apid : 11; /* 11 bit APID */
     /* Done in a struct to facilitate expansion to other addressing parameters (unlikely) */
 } spp_address;
 /* May need to add TM/TC parameter here, 1 bit flag */

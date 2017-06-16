@@ -50,7 +50,7 @@ extern spinlock_t spp_list_lock;
 /* af_spp.c */
 extern int sysctl_spp_idle_timer;
 /* spp_addr.c */
-extern char * spp2ascii(char *buf, const spp_address *addr);
+extern void spp2ascii(char *buf, const spp_address *addr);
 extern void asii2spp(spp_address *addr, const char *buf);
 extern int sppcmp(const spp_address *addr1, const spp_address *addr2);
 extern int sppval(const spp_address *addr);

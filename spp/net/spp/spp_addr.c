@@ -19,10 +19,9 @@
 #include <linux/mm.h>
 #include <linux/interrupt.h>
 
-char * spp2ascii(char *buf, const spp_address *addr)
+void spp2ascii(char *buf, const spp_address *addr)
 {
-    /* TODO: Generate a human readable version of this int (ASCII) */
-    return "2001";
+   snprintf(buf,sizeof(buf),"%d",addr->spp_apid);
 }
 EXPORT_SYMBOL(spp2ascii);
 
