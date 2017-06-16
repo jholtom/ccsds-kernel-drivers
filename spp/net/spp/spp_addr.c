@@ -21,13 +21,15 @@
 
 void spp2ascii(char *buf, const spp_address *addr)
 {
-   snprintf(buf,sizeof(buf),"%d",addr->spp_apid);
+    snprintf(buf,sizeof(buf),"%d",addr->spp_apid);
 }
 EXPORT_SYMBOL(spp2ascii);
 
 void ascii2spp(spp_address *addr, const char *buf)
 {
-    /* TODO: ASCII -> SPP address conversion */
+    unsigned int apid;
+    sscanf(buf,"%d",&apid);
+    addr->spp_apid = apid;
 }
 EXPORT_SYMBOL(ascii2spp);
 
@@ -35,13 +37,13 @@ int sppcmp(const spp_address *addr1, const spp_address *addr2)
 {
     if(addr1->spp_apid == addr2->spp_apid)
         return 0;
-    else
-        return 1;
+    return 1;
 }
 EXPORT_SYMBOL(sppcmp);
 
 int sppval(const spp_address *addr)
 {
-    /* TODO: Implement validation method */
-    return 0;
+    if(addr->spp_apid <= 2047 && addr->spp_apid >= 0)
+        return 0;
+    return 1;
 }
