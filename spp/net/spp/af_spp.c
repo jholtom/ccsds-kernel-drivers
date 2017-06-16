@@ -347,10 +347,29 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     int rc;
 
     switch (cmd) {
-        case TIOCOUTQ:
+        case TIOCOUTQ: /* output queue length */
             break;
-        case TIOCINQ:
+        case TIOCINQ: /* input queue length */
             break;
+        case SIOCGSTAMP:
+                rc = -EINVAL;
+                if (sk) 
+                        rc = sock_get_timestamp(sk,
+                                        (struct timeval __user *)argp);
+                break;
+        case SIOCGSTAMPNS:
+                rc = -EINVAL;
+                if (sk) 
+                        rc = sock_get_timestampns(sk,
+                                        (struct timespec __user *)argp);
+                break;
+
+        case SIOCGIFADDR:
+                break;
+        case SIOCSIFADDR:
+                break;
+        case SIOCSIFFLAGS:
+                break;
         default:
             return -ENOIOCTLCMD;
             break;
