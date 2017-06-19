@@ -101,8 +101,28 @@ static void spp_destroy_timer(unsigned long data)
  */
 static int spp_setsockopt(struct socket *sock, int level, int optname, char __user *optval, unsigned int optlen)
 {
-    /* TODO: implement socket option setter */
-    return 0;
+    int opt;
+    struct sock *sk = sock->sk;
+    int rc = -ENOPROTOOPT;
+
+    lock_kernel();
+    if (level != SOL_SPP || optname != SPP_PKTTYPE)
+        goto out;
+
+    rc = -EINVAL;
+    if (optlen < sizeof(int))
+        goto out;
+
+    rc = -EFAULT;
+    if(get_user(opt, (int __user *)optval))
+        goto out;
+
+    spp_sk(sk)->type = !!opt;
+    rc = 0;
+
+out:
+    unlock_kernel();
+    return rc;
 }
 
 /*
@@ -111,8 +131,32 @@ static int spp_setsockopt(struct socket *sock, int level, int optname, char __us
  */
 static int spp_getsockopt(struct socket *sock, int level, int optname, char __user *optval, unsigned int optlen)
 {
-    /* TODO: implement socket option getter */
-    return 0;
+    struct sock *sk = sock->sk;
+    int val, len, rc = -ENOPROTOOPT;
+
+    lock_kernel();
+    if (level != SOL_SPP || optname != SPP_PKTTYPE)
+        goto out;
+
+    rc = -EFAULT;
+    if(get_user(len,optlen))
+        goto out;
+
+    len = min_t(unsigned int, len, sizeof(int));
+
+    rc = -EINVAL;
+    if (len < 0)
+        goto out;
+
+    rc = -EFAULT;
+    if(put_user(len,optlen))
+        goto out;
+
+    val = spp_sk(sk)->type;
+    rc = copy_to_user(optval,&val,len) ? -EFAULT : 0;
+out:
+    unlock_kernel;
+    return rc;
 }
 
 /*
@@ -347,19 +391,15 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     int rc;
 
     switch (cmd) {
-        case TIOCOUTQ: /* output queue length */
-            break;
-        case TIOCINQ: /* input queue length */
-            break;
         case SIOCGSTAMP:
                 rc = -EINVAL;
-                if (sk) 
+                if (sk)
                         rc = sock_get_timestamp(sk,
                                         (struct timeval __user *)argp);
                 break;
         case SIOCGSTAMPNS:
                 rc = -EINVAL;
-                if (sk) 
+                if (sk)
                         rc = sock_get_timestampns(sk,
                                         (struct timespec __user *)argp);
                 break;
@@ -369,6 +409,12 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
         case SIOCSIFADDR:
                 break;
         case SIOCSIFFLAGS:
+                break;
+        case SIOCGIFFLAGS:
+                break;
+        case SIOCGIFMTU:
+                break;
+        case SIOCSIFMTU:
                 break;
         default:
             return -ENOIOCTLCMD;

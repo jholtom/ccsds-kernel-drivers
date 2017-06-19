@@ -20,3 +20,8 @@
     ```
     #define ETH_P_SPP 0x0807 /* CCSDS SPP */
     ```
+- Acquire SOL_SPP in <linux/socket.h>
+    - In the meantime, go add your own, I've been using this snippet
+    ```
+    #define SOL_SPP 278
+    ```

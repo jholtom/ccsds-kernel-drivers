@@ -19,6 +19,8 @@
 
 #define SPP_OUT_OF_ORDER 0
 
+#define SPP_PKTTYPE 27 /* TODO: fix location of this (maybe), and assign a better value */
+
 struct spp_entity {
 /* An end of the connection - May not need because we have no true 'routing' support */
 };
@@ -27,9 +29,7 @@ struct spp_sock {
     struct sock sock;
     spp_address s_addr, d_addr;
     struct net_device *device;
-    unsigned int lci, rand;
-    unsigned char state, condition, qbitincl, defer;
-    unsigned char cause, diagnostic;
+    unsigned char state, condition, defer, type, cause, diagnostic;
     struct sk_buff_head fragment_queue;
     struct sk_buff_head interrupt_in_queue;
     struct sk_buff_head interrupt_out_queue;
