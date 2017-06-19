@@ -210,13 +210,32 @@ static int spp_create(struct net *net, struct socket *sock, int protocol, int ke
     return 0;
 }
 
-/* 
- * Handle Device Status changes 
+/*
+ * Handle Device Status changes
  */
 static int spp_device_event(struct notifier_block *this, unsigned long event, void *ptr)
 {
-    /* TODO: Implement device status change handling */
-    return 0;
+    struct net_device *dev = ptr;
+    if(!net_eq(dev_net(dev), &init_net))
+        return NOTIFY_DONE;
+
+    /* TODO: enable it to also switch if the type is SDLP, or another layer
+     * This is fairly mission specific...*/
+    if (dev->type == ARPHRD_SLIP){
+        switch(event) {
+            case NETDEV_UP:
+                spp_link_device_up(dev);
+                break;
+            case NETDEV_GOING_DOWN:
+                spp_terminate_link();
+                break;
+            case NETDEV_DOWN:
+                spp_kill_by_device(dev);
+                spp_link_device_down(dev);
+                break;
+        }
+    }
+    return NOTIFY_DONE;
 }
 
 /*
@@ -327,7 +346,27 @@ static int spp_accept(struct socket *sock, struct socket *newsock, int flags)
  */
 static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_len, int peer)
 {
-    /* TODO: Figure out expected behavior and implement */
+    struct sockaddr_spp *sspp = (struck sockaddr_spp *)uaddr;
+    struct sock *sk = sock->sk;
+    struct spp_sock *spp = spp_sk(sk);
+    int rc = 0;
+
+    lock_kernel();
+    if (peer) {
+        if(sk->sk_state != TCP_ESTABLISHED){
+            rc = -ENOTCONN;
+            goto out; /* Theoretically this should never happen, but we have the potential to go into IDLE_TIMEOUT and then we go into a dead state...*/
+        }
+        sspp->sspp_addr = spp->d_addr;
+    } else
+        sspp->sspp_addr = spp_s_addr;
+
+    sspp->sspp_family = AF_SPP;
+    *uaddr_len = sizeof(*sspp);
+
+out:
+    unlock_kernel();
+    return rc;
 }
 
 /*
