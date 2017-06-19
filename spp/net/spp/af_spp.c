@@ -85,7 +85,7 @@ static void spp_insert_socket(struct sock *sk)
     spin_unlock_bh(&spp_list_lock); /* Release socket list lock */
 }
 
-void spp_destroy_socket(struct sock *); /* Forward definition of socket destroy */ 
+void spp_destroy_socket(struct sock *); /* Forward definition of socket destroy */
 
 /* 
  * Handles deferred socket kills on a timer
@@ -160,7 +160,7 @@ out:
 }
 
 /*
- * Puts socket into listening mode (Enables a socket to listen!) 
+ * Puts socket into listening mode (Enables a socket to listen!)
  */
 static int spp_listen(struct socket *sock, int backlog)
 {
@@ -177,7 +177,7 @@ static int spp_listen(struct socket *sock, int backlog)
     return -EOPNOTSUPP; /* If we can't go into listen mode, it isn't supported */
 }
 
-/* 
+/*
  * Defines the Protocol Family kernel object (the socket)
  */
 static struct proto spp_proto = {
@@ -313,7 +313,7 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
     if (sock_flag(sk, SOCK_ZAPPED))
         goto out;
 
-    spp_address spp_null = spp_nulladdr; 
+    spp_address spp_null = spp_nulladdr;
     if(!sppcmp(&(spp->s_addr), &spp_null))
         /*TODO: set spp->s_addr to null address */
         spp->d_addr = addr->sspp_addr;
@@ -517,7 +517,7 @@ static const struct proto_ops spp_proto_ops = {
     .sendpage = sock_no_sendpage,
 };
 
-/* 
+/*
  * Space Packet Protocol packet type (kernel object)
  */
 static struct packet_type spp_packet_type __read_mostly = {
@@ -532,8 +532,8 @@ static struct notifier_block spp_dev_notifier = {
     .notifier_call = spp_device_event,
 };
 
-/* 
- * Initializes SPP in kernel (module_init) 
+/*
+ * Initializes SPP in kernel (module_init)
  */
 static int __init spp_init(void)
 {
