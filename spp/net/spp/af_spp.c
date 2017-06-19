@@ -224,14 +224,16 @@ static int spp_device_event(struct notifier_block *this, unsigned long event, vo
     if (dev->type == ARPHRD_SLIP){
         switch(event) {
             case NETDEV_UP:
-                spp_link_device_up(dev);
+                /* TODO: Probably just initialize the idle timer here
+                 * spp_link_device_up(dev);*/
                 break;
             case NETDEV_GOING_DOWN:
-                spp_terminate_link();
+                /* TODO: probably just kill off the idle timer here
+                spp_terminate_link(); */
                 break;
             case NETDEV_DOWN:
                 spp_kill_by_device(dev);
-                spp_link_device_down(dev);
+                /* spp_link_device_down(dev); TODO: probably don't need since we are point to point and have no "links" */
                 break;
         }
     }
