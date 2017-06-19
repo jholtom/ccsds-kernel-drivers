@@ -97,23 +97,6 @@ the other side of the link. Otherwise, set or clear the
 .B IFF_POINTOPOINT
 flag for the interface.
 .TP
-.B hw class address
-Set the hardware address of this interface, if the device driver
-supports this operation.  The keyword must be followed by the
-name of the hardware class and the printable ASCII equivalent of
-the hardware address.  Hardware classes currently supported include
-.B ether
-(Ethernet),
-.B ax25
-(AMPR AX.25),
-.B ARCnet
-and
-.B netrom
-(AMPR NET/ROM).
-.TP
-.B address
-The IP address to be assigned to this interface.
-.TP
 .B txqueuelen length
 Set the length of the transmit queue of the device. It is useful to set this
 to small values for slower devices with a high latency (modem links, ISDN)
@@ -140,17 +123,15 @@ it is most likely a interrupt conflict. See
 for more information.
 .SH FILES
 .I /proc/net/dev
-.br
-.I /proc/net/if_inet6
 .SH SEE ALSO
-route(8), netstat(8), arp(8), rarp(8), iptables(8), ifup(8), interfaces(5).
+netstat(8), iptables(8), ifup(8), interfaces(5).
 .br
 http://physics.nist.gov/cuu/Units/binary.html - Prefixes for binary multiples
 .SH AUTHORS
 .br
 Jacob Willis, <willisj2@byu.edu>
 .br
-Jacob Holtom, <>
+Jacob Holtom, <jacob@holtom.me>
 .br
 Fred N. van Kempen, <waltje@uwalt.nl.mugnet.org>
 .br
