@@ -42,14 +42,7 @@ be more verbose for some error conditions
 The name of the interface.  This is usually a driver name followed by
 a unit number, for example
 .B slp0
-for the first SLIP interface. If your kernel supports alias interfaces,
-you can specify them with syntax like
-.B slp0:0
-for the first alias of slp0. You can use them to assign more addresses. To
-delete an alias interface use
-.BR "sppconfig slp0:0 down" .
-Note: for every scope (i.e. same net with address/netmask combination) all
-aliases are deleted, if you delete the first (primary).
+for the first SLIP interface.
 .TP
 .B up
 This flag causes the interface to be activated.  It is implicitly
