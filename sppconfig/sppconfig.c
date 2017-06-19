@@ -30,7 +30,7 @@
 
 #define DFLT_AF "inet"
 
-#include "config.h"
+//#include "config.h"
 
 #include <features.h>
 #include <sys/types.h>
@@ -52,38 +52,21 @@
 #include <asm/types.h>
 
 
-#if HAVE_HWSLIP
 #include <linux/if_slip.h>
-#endif
-
-#if HAVE_AFINET6
-
-#ifndef _LINUX_IN6_H
-/*
- *    This is in linux/include/net/ipv6.h.
- */
-
-struct in6_ifreq {
-    struct in6_addr ifr6_addr;
-    __u32 ifr6_prefixlen;
-    unsigned int ifr6_ifindex;
-};
-
-#endif
-
-#endif				/* HAVE_AFINET6 */
 
 #if HAVE_AFIPX
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
 #include <netipx/ipx.h>
+#warning "using <netipx/ipx.h>"
 #else
 #include "ipx.h"
+#warning "using ipx.h"
 #endif
 #endif
 #include "net-support.h"
 #include "pathnames.h"
 #include "version.h"
-#include "../intl.h"
+#include "intl.h"
 #include "interface.h"
 #include "sockets.h"
 #include "util.h"
@@ -509,40 +492,6 @@ int main(int argc, char **argv)
 		}
 	    }
 	    goterr |= set_flag(ifr.ifr_name, IFF_POINTOPOINT);
-	    strpp++;
-	    continue;
-	}
-
-	if (!strcmp(*strpp, "hw")) {
-	    if (*++strpp == NULL)
-		    usage();
-	    if ((hw = get_hwtype(*strpp)) == NULL)
-		    usage();
-	    if (hw->input == NULL) {
-	    	fprintf(stderr, _("hw address type `%s' has no handler to set address. failed.\n"), *strpp);
-	    	strpp+=2;
-	    	goterr = 1;
-	    	continue;
-	    }
-	    if (*++strpp == NULL)
-		    usage();
-	    safe_strncpy(host, *strpp, (sizeof host));
-	    if (hw->input(host, &_sa) < 0) {
-    		fprintf(stderr, _("%s: invalid %s address.\n"), host, hw->name);
-    		goterr = 1;
-    		strpp++;
-    		continue;
-	    }
-	    memcpy(&ifr.ifr_hwaddr, sa, sizeof(struct sockaddr));
-	    if (ioctl(skfd, SIOCSIFHWADDR, &ifr) < 0) {
-    		if (errno == EBUSY)
-    			fprintf(stderr, "SIOCSIFHWADDR: %s - you may need to down the interface\n",
-    				strerror(errno));
-    		else
-    			fprintf(stderr, "SIOCSIFHWADDR: %s\n",
-    				strerror(errno));
-    		goterr = 1;
-	    }
 	    strpp++;
 	    continue;
 	}
