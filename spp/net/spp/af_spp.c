@@ -430,31 +430,53 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     int rc;
 
     switch (cmd) {
-        case SIOCGSTAMP:
+        case TIOCOUTQ: {
+            int amount = sk->sk_sndbuf - sk_wmem_alloc_get(sk);
+            if (amount < 0)
+                amount = 0;
+            rc = put_user(amount, (unsigned int __user *)argp);
+            break;
+        }
+        case TIOCINQ: {
+            struct sk_buff *skb;
+            int amount = 0;
+            if((skb = skb_peek(&sk->sk_receive_queue)) != NULL)
+                amount = skb->len;
+            rc = put_user(amount, (unsigned int __user *)argp);
+            break;
+        }
+        case SIOCGSTAMP: {
                 rc = -EINVAL;
                 if (sk)
                         rc = sock_get_timestamp(sk,
                                         (struct timeval __user *)argp);
                 break;
-        case SIOCGSTAMPNS:
+        }
+        case SIOCGSTAMPNS: {
                 rc = -EINVAL;
                 if (sk)
                         rc = sock_get_timestampns(sk,
                                         (struct timespec __user *)argp);
                 break;
-
-        case SIOCGIFADDR:
+        }
+        case SIOCGIFADDR: {
                 break;
-        case SIOCSIFADDR:
+        }
+        case SIOCSIFADDR: {
                 break;
-        case SIOCSIFFLAGS:
+        }
+        case SIOCSIFFLAGS: {
                 break;
-        case SIOCGIFFLAGS:
+        }
+        case SIOCGIFFLAGS: {
                 break;
-        case SIOCGIFMTU:
+        }
+        case SIOCGIFMTU: {
                 break;
-        case SIOCSIFMTU:
+        }
+        case SIOCSIFMTU: {
                 break;
+        }
         default:
             return -ENOIOCTLCMD;
             break;
