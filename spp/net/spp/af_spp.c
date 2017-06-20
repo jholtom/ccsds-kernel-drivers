@@ -158,7 +158,7 @@ static int spp_getsockopt(struct socket *sock, int level, int optname, char __us
     val = spp_sk(sk)->type;
     rc = copy_to_user(optval,&val,len) ? -EFAULT : 0;
 out:
-    unlock_kernel;
+    unlock_kernel();
     return rc;
 }
 
@@ -467,11 +467,11 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     /* Bring the user request into kernel space */
     if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
         goto out;
-    ifr.ifr_name[IFNAMESIZ - 1] = 0; /* Why? */
+    ifr.ifr_name[IFNAMSIZ - 1] = 0; /* Why? */
 
     memcpy(&sin_orig,sin, sizeof(*sin)); /* Copy the old address for comparison */
 
-    dev_load(net, ifr.ifr_name);
+    dev_load(spp, ifr.ifr_name);
 
     rtnl_lock();
     rc = -ENODEV;
