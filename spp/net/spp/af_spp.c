@@ -402,6 +402,31 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     if(usspp != NULL) {
         /* Do something */
     }
+    SOCK_DEBUG(sk, "SPP: sendto: Addresses assembled. Making packet.\n");
+
+    size = 8192; /* TODO: Assume worst case size for packet header + data...so MTU */
+
+    skb = sock_alloc_send_skb(sk, size, msg->msg_flags&MSG_DONTWAIT, &err);
+    if(skb == NULL)
+        goto out;
+
+    skb_reserve(skb, size - len);
+    SOCK_DEBUG(sk, "SPP: Adding user data\n");
+
+    if(memcpy_fromiovec(skb_put(skb,len), msg->msg_iov, len)){
+        err = -EFAULT;
+        kfree_skb(skb);
+        goto out;
+    }
+
+    skb_reset_network_header(skb);
+
+    SOCK_DEBUG(sk, "SPP: Transmitting buffer\n");
+
+
+
+
+
 }
 
 /*
