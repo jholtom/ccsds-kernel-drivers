@@ -454,7 +454,28 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
     void __user *argp = (void __user *)arg;
-    int rc;
+    struct ifreq ifr;
+    struct sockaddr_spp sin_orig;
+    struct sockaddr_spp *sin = (struct sockaddr_spp *)&ifr.ifr_addr;
+    struct net_device *dev;
+    int rc = -EFAULT;
+    int tryaddrmatch = 0;
+    lock_kernel();
+    /* Bring the user request into kernel space */
+    if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
+        goto out;
+    ifr.ifr_name[IFNAMESIZ - 1] = 0; /* Why? */
+
+    memcpy(&sin_orig,sin(sizeof(*sin))); /* Copy the old address for comparison */
+
+    dev_load(net, ifr.ifr_name);
+
+    rtnl_lock();
+    rc = -ENODEV;
+    dev = __dev_get_by_name(net, ifr.ifr_name);
+    if(!dev)
+        goto done;
+    in_dev = __in_dev_get_rtnl(dev);
 
     switch (cmd) {
         case TIOCOUTQ: {
@@ -487,28 +508,58 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                 break;
         }
         case SIOCGIFADDR: {
-                break;
+                tryaddrmatch = (sin_orig.sspp_family == AF_SPP);
+                memset(sin, 0, sizeof(*sin));
+                sin->sspp_family = AF_SPP;
+                /*sin->sspp_addr = 1; TODO: get the current interface address */
+                printk(KERN_INFO "SPP: IOCTL: Get Interface Address\n");
+                goto rarok;
         }
         case SIOCSIFADDR: {
+                rc = -EACCES;
+                if(!capable(CAP_NET_ADMIN))
+                    goto out;
+                rc = -EINVAL;
+                if (sin->sspp_family != AF_SPP)
+                    goto out;
+                /* TODO: set the interface address */
+                printk(KERN_INFO "SPP: IOCTL: Set Interface Address\n");
                 break;
         }
         case SIOCSIFFLAGS: {
+                rc = -EACCES;
+                if(!capable(CAP_NET_ADMIN))
+                    goto out;
+                /* TODO: change device flags...data from ifr.ifr_flags applied to dev*/
+                printk(KERN_INFO "SPP: IOCTL: Set Interface Flags\n");
                 break;
         }
         case SIOCGIFFLAGS: {
+                /* TODO: Return current flags...*/
+                printk(KERN_INFO "SPP: IOCTL: Get Interface Flags\n");
                 break;
         }
         case SIOCGIFMTU: {
+                /* TODO: Get current interface MTU */
                 break;
         }
         case SIOCSIFMTU: {
+                /* TODO: Set interface MTU */
                 break;
         }
         default:
             return -ENOIOCTLCMD;
             break;
     }
+    unlock_kernel();
+done:
+    rtnl_unlock();
+out:
     return rc;
+rarok:
+    rtnl_unlock();
+    rc = copy_to_user(arg, &ifr, sizeof(struct ifreq)) ? -EFAULT : 0;
+    goto out;
 }
 
 /*
