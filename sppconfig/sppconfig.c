@@ -228,11 +228,11 @@ int main(int argc, char **argv)
     struct sockaddr_in *sin = (struct sockaddr_in *)&_sa;
     char host[128];
     const struct aftype *ap;
-    const struct hwtype *hw;
+  //  const struct hwtype *hw;
     struct ifreq ifr;
     int goterr = 0, didnetmask = 0, neednetmask=0;
     char **strpp;
-    int fd;
+    //int fd;
 #if HAVE_AFINET6
     extern struct aftype inet6_aftype;
     struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&_sa;
@@ -609,60 +609,60 @@ struct ifcmd {
     int baselen;
 };
 
-static unsigned char searcher[256];
+//static unsigned char searcher[256];
 
-static int set_ip_using(const char *name, int c, unsigned long ip)
-{
-    struct ifreq ifr;
-    struct sockaddr_in sin;
-
-    safe_strncpy(ifr.ifr_name, name, IFNAMSIZ);
-    memset(&sin, 0, sizeof(struct sockaddr));
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = ip;
-    memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
-    if (ioctl(skfd, c, &ifr) < 0)
-	return -1;
-    return 0;
-}
-
-static int do_ifcmd(struct interface *x, struct ifcmd *ptr)
-{
-    char *z, *e;
-    struct sockaddr_in *sin;
-    int i;
-
-    if (do_if_fetch(x) < 0)
-	return 0;
-    if (strncmp(x->name, ptr->base, ptr->baselen) != 0)
-	return 0; /* skip */
-    z = strchr(x->name, ':');
-    if (!z || !*z)
-	return 0;
-    z++;
-    for (e = z; *e; e++)
-	if (*e == '-') /* deleted */
-	    return 0;
-    i = atoi(z);
-    if (i < 0 || i > 255)
-	abort();
-    searcher[i] = 1;
-
-    /* copy */
-    sin = (struct sockaddr_in *)&x->dstaddr_sas;
-    if (sin->sin_addr.s_addr != ptr->addr) {
-	return 0;
-    }
-
-    if (ptr->flag) {
-	/* turn UP */
-	if (set_flag(x->name, IFF_UP | IFF_RUNNING) == -1)
-	    return -1;
-    } else {
-	/* turn DOWN */
-	if (clr_flag(x->name, IFF_UP) == -1)
-	    return -1;
-    }
-
-    return 1; /* all done! */
-}
+// static int set_ip_using(const char *name, int c, unsigned long ip)
+// {
+//     struct ifreq ifr;
+//     struct sockaddr_in sin;
+//
+//     safe_strncpy(ifr.ifr_name, name, IFNAMSIZ);
+//     memset(&sin, 0, sizeof(struct sockaddr));
+//     sin.sin_family = AF_INET;
+//     sin.sin_addr.s_addr = ip;
+//     memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
+//     if (ioctl(skfd, c, &ifr) < 0)
+// 	return -1;
+//     return 0;
+// }
+//
+// static int do_ifcmd(struct interface *x, struct ifcmd *ptr)
+// {
+//     char *z, *e;
+//     struct sockaddr_in *sin;
+//     int i;
+//
+//     if (do_if_fetch(x) < 0)
+// 	return 0;
+//     if (strncmp(x->name, ptr->base, ptr->baselen) != 0)
+// 	return 0; /* skip */
+//     z = strchr(x->name, ':');
+//     if (!z || !*z)
+// 	return 0;
+//     z++;
+//     for (e = z; *e; e++)
+// 	if (*e == '-') /* deleted */
+// 	    return 0;
+//     i = atoi(z);
+//     if (i < 0 || i > 255)
+// 	abort();
+//     searcher[i] = 1;
+//
+//     /* copy */
+//     sin = (struct sockaddr_in *)&x->dstaddr_sas;
+//     if (sin->sin_addr.s_addr != ptr->addr) {
+// 	return 0;
+//     }
+//
+//     if (ptr->flag) {
+// 	/* turn UP */
+// 	if (set_flag(x->name, IFF_UP | IFF_RUNNING) == -1)
+// 	    return -1;
+//     } else {
+// 	/* turn DOWN */
+// 	if (clr_flag(x->name, IFF_UP) == -1)
+// 	    return -1;
+//     }
+//
+//     return 1; /* all done! */
+// }
