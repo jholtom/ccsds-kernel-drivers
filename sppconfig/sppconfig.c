@@ -182,27 +182,15 @@ static void version(void)
     exit(E_VERSION);
 }
 
-static int set_netmask(int skfd, struct ifreq *ifr, struct sockaddr *sa)
-{
-    int err = 0;
-
-    memcpy(&ifr->ifr_netmask, sa, sizeof(struct sockaddr));
-    if (ioctl(skfd, SIOCSIFNETMASK, ifr) < 0) {
-    	fprintf(stderr, "SIOCSIFNETMASK: %s\n",
-    		strerror(errno));
-    	err = 1;
-    }
-    return err;
-}
-
 int main(int argc, char **argv)
 {
-    struct sockaddr_storage _sa;
-    struct sockaddr *sa = (struct sockaddr *)&_sa;
-    struct sockaddr_in *sin = (struct sockaddr_in *)&_sa;
+  //  struct sockaddr_storage _sa;
+  //  struct sockaddr *sa = (struct sockaddr *)&_sa;
+  //  struct sockaddr_in *sin = (struct sockaddr_in *)&_sa;
 
     /* FIXME: Properly declare a sockaddr_spp */
-    struct sockaddr_spp *skadrspp;
+    struct sockaddr_spp _sa;
+    struct sockaddr_spp *skadrspp = &_sa;
 
     char host[128];
     const struct aftype *ap;
