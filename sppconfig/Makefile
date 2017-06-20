@@ -1,8 +1,10 @@
 # Makefile for sppconfig (first attempt)
 # Author: Jacob Willis
 
-CC=gcc
-CFLAGS= -Wall
+CFLAGS		:= -Os -mcpu=cortex-m3 -mthumb
+LDFLAGS		:= -mcpu=cortex-m3 -mthumb
+CC		= $(CROSS_COMPILE_APPS)gcc
+
 DEPS = config.h  interface.h  intl.h  ipx.h  net-support.h
 DEPS += pathnames.h  proc.h  sockets.h  util.h  version.h
 
@@ -15,10 +17,10 @@ OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
 $(ODIR)/%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) $(LDFLAGS)
 
 sppconfig: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
-			rm -f $(ODIR)/*.o *~ 
+			rm -f $(ODIR)/*.o *~

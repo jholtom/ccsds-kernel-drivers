@@ -46,11 +46,7 @@ for the first SLIP interface.
 .TP
 .B up
 This flag causes the interface to be activated.  It is implicitly
-specified if an address is assigned to the interface; you can suppress this
-behavior when using an alias interface by appending an
-.BR "-"
-to the alias (e.g.
-.BR "eth0:0-" ).
+specified if an address is assigned to the interface.
 .TP
 .B down
 This flag causes the driver for this interface to be shut down.
@@ -61,16 +57,11 @@ Enable or disable the use of the ARP protocol on this interface.
 .B "mtu N"
 This parameter sets the Maximum Transfer Unit (MTU) of an interface.
 .TP
-.B "irq addr"
-Set the interrupt line used by this device.  Not all devices can
-dynamically change their IRQ setting.
+.B "add addr"
+Add an APID address to the interface.
 .TP
-.B "io_addr addr"
-Set the start address in I/O space for this device.
-.TP
-.B "mem_start addr"
-Set the start address for shared memory used by this device.  Only a
-few devices need this.
+.B "del addr"
+Remove an APID address from the interface.
 .TP
 .B "media type"
 Currently unimplemented.
@@ -79,14 +70,11 @@ The special medium type of
 .B auto
 can be used to tell the driver to auto-sense the media.
 .TP
-.B "[\-]pointopoint [addr]"
+.B "[\-]pointopoint"
 This keyword enables the
 .B point-to-point
 mode of an interface, meaning that it is a direct link between two
-machines with nobody else listening on it.
-.br
-If the address argument is also given, set the protocol address of
-the other side of the link. Otherwise, set or clear the
+machines with nobody else listening on it. Sets or clears the
 .B IFF_POINTOPOINT
 flag for the interface.
 .TP
