@@ -12,6 +12,7 @@
 #include <linux/types.h>
 #include <linux/socket.h>
 #include <linux/in.h>
+#include <linux/smp_lock.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
 #include <linux/timer.h>
@@ -19,6 +20,8 @@
 #include <linux/sockios.h>
 #include <linux/net.h>
 #include <linux/slab.h>
+#include <linux/if.h>
+#include <linux/if_arp.h>
 #include <linux/inet.h>
 #include <linux/netdevice.h>
 #include <linux/skbuff.h>
@@ -129,7 +132,7 @@ out:
  * Handles getting the current options of a socket
  * Handles SPP specific socket options (and possibly socket level options too)
  */
-static int spp_getsockopt(struct socket *sock, int level, int optname, char __user *optval, unsigned int optlen)
+static int spp_getsockopt(struct socket *sock, int level, int optname, char __user *optval, unsigned int *optlen)
 {
     struct sock *sk = sock->sk;
     int val, len, rc = -ENOPROTOOPT;
@@ -348,7 +351,7 @@ static int spp_accept(struct socket *sock, struct socket *newsock, int flags)
  */
 static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_len, int peer)
 {
-    struct sockaddr_spp *sspp = (struck sockaddr_spp *)uaddr;
+    struct sockaddr_spp *sspp = (struct sockaddr_spp *)uaddr;
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
     int rc = 0;
@@ -361,7 +364,7 @@ static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_l
         }
         sspp->sspp_addr = spp->d_addr;
     } else
-        sspp->sspp_addr = spp_s_addr;
+        sspp->sspp_addr = spp->s_addr;
 
     sspp->sspp_family = AF_SPP;
     *uaddr_len = sizeof(*sspp);
@@ -425,8 +428,8 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
 
 
-
-
+out:
+    return err;
 }
 
 /*
@@ -466,16 +469,15 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
         goto out;
     ifr.ifr_name[IFNAMESIZ - 1] = 0; /* Why? */
 
-    memcpy(&sin_orig,sin(sizeof(*sin))); /* Copy the old address for comparison */
+    memcpy(&sin_orig,sin, sizeof(*sin)); /* Copy the old address for comparison */
 
     dev_load(net, ifr.ifr_name);
 
     rtnl_lock();
     rc = -ENODEV;
-    dev = __dev_get_by_name(net, ifr.ifr_name);
+    dev = __dev_get_by_name(spp, ifr.ifr_name);
     if(!dev)
         goto done;
-    in_dev = __in_dev_get_rtnl(dev);
 
     switch (cmd) {
         case TIOCOUTQ: {
