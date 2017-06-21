@@ -206,6 +206,7 @@ static int spp_create(struct net *net, struct socket *sock, int protocol, int ke
 {
     struct sock *sk;
     struct spp_sock *spp;
+    int rc;
 
     if(!net_eq(net, &init_net))
         return -EAFNOSUPPORT;
@@ -216,6 +217,7 @@ static int spp_create(struct net *net, struct socket *sock, int protocol, int ke
     sk = sk_alloc(net, AF_SPP, GFP_ATOMIC, &spp_proto);
     if (sk == NULL)
         return -ENOMEM;
+
     spp = spp_sk(sk);
     sock_init_data(sock, sk);
     /* TODO:  initialize timer here */
@@ -226,9 +228,7 @@ static int spp_create(struct net *net, struct socket *sock, int protocol, int ke
     /* TODO: set idle timer value here */
 
     rc = 0;
-
-out:
-    return 0;
+    return rc;
 }
 
 /*
