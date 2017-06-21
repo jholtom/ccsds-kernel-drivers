@@ -75,6 +75,10 @@ extern int sppval(const spp_address *addr);
 extern void spp_disconnect(struct sock *sk, int reason, unsigned char cause, unsigned char diagnostic);
 extern int spp_kiss_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev);
 
+/* spp_in.c */
+extern int spp_process_rx(struct sock *, struct sk_buff *);
+extern int spp_backlog_rcv(struct sock *, struct sk_buff *);
+
 /* spp_out.c */
 
 /* spp_proc.c */

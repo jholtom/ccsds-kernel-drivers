@@ -210,7 +210,7 @@ static int spp_create(struct net *net, struct socket *sock, int protocol, int ke
     if(!net_eq(net, &init_net))
         return -EAFNOSUPPORT;
 
-    if(sock->type != SOCK_SEQPACKET || protocol != 0)
+    if(sock->type != SOCK_DGRAM || protocol != 0)
         return -ESOCKTNOSUPPORT;
 
     sk = sk_alloc(net, AF_SPP, GFP_ATOMIC, &spp_proto);
@@ -218,9 +218,16 @@ static int spp_create(struct net *net, struct socket *sock, int protocol, int ke
         return -ENOMEM;
     spp = spp_sk(sk);
     sock_init_data(sock, sk);
+    /* TODO:  initialize timer here */
+    sock->ops = &spp_proto_ops;
+    sk->sk_protocol = protocol;
+    sk->sk_backlog_rcv = spp_backlog_rcv;
 
-    /* TODO: rewrite so that it actually adjusts all the appropriate things/flags */
+    /* TODO: set idle timer value here */
 
+    rc = 0;
+
+out:
     return 0;
 }
 
