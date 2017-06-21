@@ -54,8 +54,8 @@ EXPORT_SYMBOL(ascii2spp);
 int sppcmp(const spp_address *addr1, const spp_address *addr2)
 {
     if(addr1->spp_apid == addr2->spp_apid)
-        return 0;
-    return 1;
+        return 1;
+    return 0;
 }
 EXPORT_SYMBOL(sppcmp);
 

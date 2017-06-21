@@ -401,33 +401,61 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk); /* Get SPP specific socket representation */
     DECLARE_SOCKADDR(struct sockaddr_spp *, usspp, msg->msg_name); /* Use this macro to do x,y,y */
-    int err; /* Error flag */
     struct sockaddr_spp sspp; /* Temporary addressing struct */
     struct sk_buff *skb; /* Socket buffer for message handling */
     unsigned char *asmptr;
-    int n, size, qbit = 0;
-    /* Potentially need to bind socket here */
+    int noblock = msg->msg_flags & MSG_DONTWAIT;
+    size_t size;
+    int rc = -EINVAL;
 
-    /* Check MSG length */
+    lock_kernel();
 
-    lock_sock(sk);
-    /* Do some checks whether or not something is bad about the message */
-    if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_EOR|MSG_CMSG_COMPAT))
-        return -EINVAL;
-    /* Check whether or not the socket is zapped */
+    if(msg->msg_flags & ~(MSG_DONTWAIT|MSB_OOB|MSG_EOR|MSG_CMSG_COMPAT))
+        goto out;
 
-    /* Check if pipe has shutdown */
+    if(!(msg->msg_flags & (MSG_EOF)))
+        goto out;
 
-    /* Can't reach the other end? */
+    rc = -EADDRNOTAVAIL;
+    if(sock_flag(sk,SOCK_ZAPPED))
+        goto out;
 
-    if(usspp != NULL) {
-        /* Do something */
+    rc = -EPIPE;
+    if (sk->sk_shutdown & SEND_SHUTDOWN){
+        send_sig(SIGPIPE, current, 0);
+        goto out;
     }
-    SOCK_DEBUG(sk, "SPP: sendto: Addresses assembled. Making packet.\n");
 
-    size = 8192; /* TODO: Assume worst case size for packet header + data...so MTU */
+    if(usspp) {
+        rc = -EINVAL;
+        if(msg->msg_namelen < sizeof(sspp))
+            goto out;
+        memcpy(&sspp, usspp, sizeof(sspp));
+        rc = -EISCONN;
+        if (sppcmp(&(spp->d_addr), &sspp.sspp_addr))
+            goto out;
+        rc = -EINVAL;
+        if(sspp.sspp_family != AF_SPP)
+            goto out;
+    } else {
+       rc = -ENOTCONN;
+       if (sk->sk_state != TCP_ESTABLISHED)
+           goto out;
 
-    skb = sock_alloc_send_skb(sk, size, msg->msg_flags&MSG_DONTWAIT, &err);
+       sspp.sspp_family = AF_SPP;
+       sspp.sspp_addr = spp->d_addr;
+    }
+    if (len > 65535) {
+        rc = -EMSGSIZE;
+        goto out;
+    }
+    SOCK_DEBUG(sk, "SPP: sendmsg: Addresses assembled. Making packet.\n");
+
+    /* FIXME: we aren't doing OutOfBand data at all right now */
+
+    size = len + SPP_HEADER_LEN; /* TODO: Create this #define in net/spp.h */
+
+    skb = sock_alloc_send_skb(sk, size, msg->msg_flags&MSG_DONTWAIT, &rc);
     if(skb == NULL)
         goto out;
 
@@ -447,7 +475,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
 
 out:
-    return err;
+    return rc;
 }
 
 /*
