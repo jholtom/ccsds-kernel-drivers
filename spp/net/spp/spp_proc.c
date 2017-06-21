@@ -62,6 +62,31 @@ static void spp_seq_socket_stop(struct seq_file *seq, void *v) __releases(spp_li
 }
 static int spp_seq_socket_show(struct seq_file *seq, void *v)
 {
+    struct sock *s;
+    struct spp_sock *spp;
+    struct net_device *dev;
+    const char *devname;
+
+    if (v == SEQ_START_TOKEN){
+        seq_printf(seq, "dest_addr  src_addr  dev  idle  Snd-Q Rcv-Q inode\n");
+        goto out;
+    }
+    s = v;
+    spp = spp_sock(s);
+    if (!spp->device || (dev = spp->device) == NULL)
+        devname = "???";
+    else
+        devname = spp->device->name;
+
+    seq_printf(seq, "%d %d %-5s %d %5d %5d %ld\n",
+            !spp->d_addr.spp_apid ? "*" : spp->d_addr.spp_apid,
+            !spp->s_addr.spp_apid ? "*" : spp->s_addr.spp_apid,
+            devname,
+            spp->idle_timer / HZ,
+            sk_wmem_alloc_get(s),
+            sk_rmem_alloc_get(s),
+            s->sk_socket ? SOCK_INODE(s->sk_socket)->i_ino : 0L);
+out:
     return 0;
 }
 

@@ -65,3 +65,4 @@ int sppval(const spp_address *addr)
         return 0;
     return 1;
 }
+EXPORT_SYMBOL(sppval);
