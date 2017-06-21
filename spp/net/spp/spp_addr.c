@@ -62,7 +62,7 @@ EXPORT_SYMBOL(sppcmp);
 int sppval(const spp_address *addr)
 {
     if(addr->spp_apid <= 2047 && addr->spp_apid >= 0)
-        return 0;
-    return 1;
+        return 1;
+    return 0;
 }
 EXPORT_SYMBOL(sppval);

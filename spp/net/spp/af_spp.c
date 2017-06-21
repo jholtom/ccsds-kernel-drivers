@@ -282,12 +282,10 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
     if(!sock_flag(sk, SOCK_ZAPPED) ||
             addr_len != sizeof(struct sockaddr_spp) ||
             addr->sspp_family != AF_SPP) {
-        printk(KERN_INFO "SPP: Bad AF in bind, bad size, or the socket was zapped\n");
         rc = -EINVAL;
         goto out;
     }
     if(!sppval(&(addr->sspp_addr))){
-        printk(KERN_INFO "SPP: Invalid SPP Address passed to bind\n");
         rc = -EINVAL;
         goto out;
     }
