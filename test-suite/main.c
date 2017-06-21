@@ -5,9 +5,6 @@
 #include <stdlib.h>
 #include <netspp/spp.h>
 
-#define AF_SPP 39 /* Don't really do this, but for testings sake */
-
-
 int main() {
     int fd;
     struct sockaddr_spp myaddr;
@@ -27,7 +24,9 @@ int main() {
         perror("cannot create socket");
         return -1;
     }
-
+    while(1){
+        sleep(1);
+    }
     if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
         perror("bind failed");
         return -2;
