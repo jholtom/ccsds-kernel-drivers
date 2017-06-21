@@ -1,7 +1,8 @@
 # Makefile for sppconfig (first attempt)
 # Author: Jacob Willis
 
-CFLAGS		:= -Os -mcpu=cortex-m3 -mthumb
+CFLAGS		:= -Os -mcpu=cortex-m3 -mthumb -I/home/ecestudent/linux-cortexm-1.14.3/A2F/root/usr/include/
+
 LDFLAGS		:= -mcpu=cortex-m3 -mthumb
 CC		= $(CROSS_COMPILE_APPS)gcc
 
@@ -13,7 +14,6 @@ _OBJ = af.o  getroute.o  hippi.o  hw.o  interface.o  nstrcmp.o loopback.o
 _OBJ += proc.o  sockets.o  util.o unix.o slip.o sppconfig.o
 
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
-
 
 
 $(ODIR)/%.o: %.c $(DEPS)

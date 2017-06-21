@@ -48,8 +48,8 @@
 #include <unistd.h>
 #include <netdb.h>
 
-#include <linux/spp.h>
-#include <net/spp.h>
+//#include <linux/spp.h>
+#include <netspp/spp.h>
 
 /* Ugh.  But libc5 doesn't provide POSIX types.  */
 #include <asm/types.h>
@@ -238,7 +238,7 @@ int main(int argc, char **argv)
 
     /* Create a channel to the NET kernel. */
     if ((skfd = sockets_open(0)) < 0) {
-    	perror("socket");
+    	perror("socket"); /* FIXME: sockets_open doesn't set errno */
     	exit(1);
     }
 

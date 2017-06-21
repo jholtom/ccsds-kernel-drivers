@@ -32,34 +32,34 @@ int sockets_open(int family)
 	    force = 1;
     }
     for (aft = aftypes; *aft; aft++) {
-	struct aftype *af = *aft;
-	int type = SOCK_DGRAM;
-	if (af->af == AF_UNSPEC)
-	    continue;
-	if (family && family != af->af)
-	    continue;
-	if (af->fd != -1) {
-	    sfd = af->fd;
-	    continue;
-	}
-	/* Check some /proc file first to not stress kmod */
-	if (!family && !force && af->flag_file) {
-	    if (access(af->flag_file, R_OK))
-		continue;
-	}
-#if HAVE_AFNETROM
-	if (af->af == AF_NETROM)
-	    type = SOCK_SEQPACKET;
-#endif
-#if HAVE_AFX25
-       if (af->af == AF_X25)
-           type = SOCK_SEQPACKET;
-#endif
-	af->fd = socket(af->af, type, 0);
-	if (af->fd >= 0)
-	    sfd = af->fd;
+    	struct aftype *af = *aft;
+    	int type = SOCK_DGRAM;
+    	if (af->af == AF_UNSPEC)
+    	    continue;
+    	if (family && family != af->af)
+    	    continue;
+    	if (af->fd != -1) {
+    	    sfd = af->fd;
+    	    continue;
+    	}
+    	/* Check some /proc file first to not stress kmod */
+    	if (!family && !force && af->flag_file) {
+    	    if (access(af->flag_file, R_OK))
+    		    continue;
+    	}
+    #if HAVE_AFNETROM
+    	if (af->af == AF_NETROM)
+    	    type = SOCK_SEQPACKET;
+    #endif
+    #if HAVE_AFX25
+           if (af->af == AF_X25)
+               type = SOCK_SEQPACKET;
+    #endif
+    	af->fd = socket(af->af, type, 0);
+    	if (af->fd >= 0)
+    	    sfd = af->fd;
     }
     if (sfd < 0)
-	fprintf(stderr, _("No usable address families found.\n"));
+	     fprintf(stderr, _("No usable address families found.\n"));
     return sfd;
 }

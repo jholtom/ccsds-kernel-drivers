@@ -27,18 +27,8 @@
 #include "intl.h"
 #include "util.h"
 
-int flag_unx;
-int flag_ipx;
-int flag_ax25;
-int flag_ddp;
-int flag_netrom;
-int flag_inet;
-int flag_inet6;
-int flag_econet;
-int flag_rose;
-int flag_x25 = 0;
-int flag_ash;
-int flag_bluetooth;
+
+int flag_spp;
 
 
 static const struct aftrans_t {
@@ -46,152 +36,29 @@ static const struct aftrans_t {
     char *name;
     int *flag;
 } aftrans[] = {
-
     {
-	"ax25", "ax25", &flag_ax25
+        "spp", "spp", &flag_spp
     },
     {
-	"ip", "inet", &flag_inet
-    },
-    {
-	"ip6", "inet6", &flag_inet6
-    },
-    {
-	"ipx", "ipx", &flag_ipx
-    },
-    {
-	"rose", "rose", &flag_rose
-    },
-    {
-	"appletalk", "ddp", &flag_ddp
-    },
-    {
-	"netrom", "netrom", &flag_netrom
-    },
-    {
-	"inet", "inet", &flag_inet
-    },
-    {
-	"inet6", "inet6", &flag_inet6
-    },
-    {
-	"ddp", "ddp", &flag_ddp
-    },
-    {
-	"unix", "unix", &flag_unx
-    },
-    {
-	"tcpip", "inet", &flag_inet
-    },
-    {
-	"econet", "ec", &flag_econet
-    },
-    {
-	"x25", "x25", &flag_x25
-    },
-    {
-        "ash", "ash", &flag_ash
-    },
-    {
-        "bluetooth", "bluetooth", &flag_bluetooth
-    },
-    {
-	0, 0, 0
+	     0, 0, 0
     }
 };
 
 char afname[256] = "";
 
-extern struct aftype unspec_aftype;
-extern struct aftype unix_aftype;
-extern struct aftype inet_aftype;
-extern struct aftype inet6_aftype;
-extern struct aftype ax25_aftype;
-extern struct aftype netrom_aftype;
-extern struct aftype ipx_aftype;
-extern struct aftype ddp_aftype;
-extern struct aftype ec_aftype;
-extern struct aftype x25_aftype;
-extern struct aftype rose_aftype;
-extern struct aftype ash_aftype;
+extern struct aftype spp_aftype;
 
 static short sVafinit = 0;
 
 struct aftype * const aftypes[] =
 {
-#if HAVE_AFUNIX
-    &unix_aftype,
-#endif
-#if HAVE_AFINET
-    &inet_aftype,
-#endif
-#if HAVE_AFINET6
-    &inet6_aftype,
-#endif
-#if HAVE_AFAX25
-    &ax25_aftype,
-#endif
-#if HAVE_AFNETROM
-    &netrom_aftype,
-#endif
-#if HAVE_AFROSE
-    &rose_aftype,
-#endif
-#if HAVE_AFIPX
-    &ipx_aftype,
-#endif
-#if HAVE_AFATALK
-    &ddp_aftype,
-#endif
-#if HAVE_AFECONET
-    &ec_aftype,
-#endif
-#if HAVE_AFASH
-    &ash_aftype,
-#endif
-#if HAVE_AFX25
-    &x25_aftype,
-#endif
-    &unspec_aftype,
+    &spp_aftype,
     NULL
 };
 
 static void afinit(void)
 {
-    unspec_aftype.title = _("UNSPEC");
-#if HAVE_AFUNIX
-    unix_aftype.title = _("UNIX Domain");
-#endif
-#if HAVE_AFINET
-    inet_aftype.title = _("DARPA Internet");
-#endif
-#if HAVE_AFINET6
-    inet6_aftype.title = _("IPv6");
-#endif
-#if HAVE_AFAX25
-    ax25_aftype.title = _("AMPR AX.25");
-#endif
-#if HAVE_AFNETROM
-    netrom_aftype.title = _("AMPR NET/ROM");
-#endif
-#if HAVE_AFIPX
-    ipx_aftype.title = _("Novell IPX");
-#endif
-#if HAVE_AFATALK
-    ddp_aftype.title = _("Appletalk DDP");
-#endif
-#if HAVE_AFECONET
-    ec_aftype.title = _("Econet");
-#endif
-#if HAVE_AFX25
-    x25_aftype.title = _("CCITT X.25");
-#endif
-#if HAVE_AFROSE
-    rose_aftype.title = _("AMPR ROSE");
-#endif
-#if HAVE_AFASH
-    ash_aftype.title = _("Ash");
-#endif
+    spp_aftype.title = _("Space Packet Protocol");
     sVafinit = 1;
 }
 
@@ -238,16 +105,16 @@ const struct aftype *get_aftype(const char *name)
     struct aftype * const *afp;
 
     if (!sVafinit)
-	afinit();
+	     afinit();
 
     afp = aftypes;
     while (*afp != NULL) {
-	if (!strcmp((*afp)->name, name))
-	    return (*afp);
-	afp++;
+    	if (!strcmp((*afp)->name, name))
+    	    return (*afp);
+    	afp++;
     }
     if (index(name, ','))
-	fprintf(stderr, _("Please don't supply more than one address family.\n"));
+	     fprintf(stderr, _("Please don't supply more than one address family.\n"));
     return (NULL);
 }
 
