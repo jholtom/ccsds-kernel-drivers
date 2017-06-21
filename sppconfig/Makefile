@@ -3,7 +3,7 @@
 
 CFLAGS		:= -Os -mcpu=cortex-m3 -mthumb -I/home/ecestudent/linux-cortexm-1.14.3/A2F/root/usr/include/
 
-LDFLAGS		:= -mcpu=cortex-m3 -mthumb
+LDFLAGS		:= -mcpu=cortex-m3 -mthumb -l/home/ecestudent/linux-cortexm-1.14.3/A2F/root/usr/include/
 CC		= $(CROSS_COMPILE_APPS)gcc
 
 DEPS = config.h  interface.h  intl.h  ipx.h  net-support.h

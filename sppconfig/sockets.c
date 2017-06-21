@@ -25,12 +25,13 @@ int sockets_open(int family)
     static int force = -1;
 
     if (force < 0) {
-	force = 0;
-	if (kernel_version() < KRELEASE(2, 1, 0))
-	    force = 1;
-	if (access("/proc/net", R_OK))
-	    force = 1;
+    	force = 0;
+    	if (kernel_version() < KRELEASE(2, 1, 0))
+    	    force = 1;
+    	if (access("/proc/net", R_OK))
+    	    force = 1;
     }
+
     for (aft = aftypes; *aft; aft++) {
     	struct aftype *af = *aft;
     	int type = SOCK_DGRAM;

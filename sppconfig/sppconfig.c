@@ -345,7 +345,7 @@ int main(int argc, char **argv)
     		    usage();
 
           /* get the spp address and convert from ascii */
-          ascii2spp(skadrspp->sspp_addr, *strpp);
+          ascii2spp(&skadrspp, *strpp);
     	    ifr.ifr_addr = skadrspp;
     	    if (ioctl(skfd, SIOCSIFADDR, &ifr) < 0) {
         		fprintf(stderr, "SIOCSIFADDR: %s\n", strerror(errno));
@@ -361,7 +361,7 @@ int main(int argc, char **argv)
             usage();
 
           /* get the spp address and convert from ascii */
-          ascii2spp(skadrspp->sspp_addr, *strpp);
+          ascii2spp(&skadrspp, *strpp);
           ifr.ifr_addr = skadrspp;
           if (ioctl(skfd, SIOCDIFADDR, &ifr) < 0) {
             fprintf(stderr, "SIOCDIFADDR: %s\n", strerror(errno));
