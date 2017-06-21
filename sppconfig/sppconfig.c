@@ -81,6 +81,31 @@ int opt_v = 0;			/* debugging output flag        */
 
 int addr_family = 0;		/* currently selected AF        */
 
+void spp2ascii(char *buf, const spp_address *addr)
+{
+    snprintf(buf,sizeof(buf),"%d",addr->spp_apid);
+}
+
+void ascii2spp(spp_address *addr, const char *buf)
+{
+    unsigned int apid;
+    sscanf(buf,"%d",&apid);
+    addr->spp_apid = apid;
+}
+
+int sppcmp(const spp_address *addr1, const spp_address *addr2)
+{
+    if(addr1->spp_apid == addr2->spp_apid)
+        return 0;
+    return 1;
+}
+
+int sppval(const spp_address *addr)
+{
+    if(addr->spp_apid <= 2047 && addr->spp_apid >= 0)
+        return 0;
+    return 1;
+}
 
 static int if_print(char *ifname)
 {
@@ -345,8 +370,8 @@ int main(int argc, char **argv)
     		    usage();
 
           /* get the spp address and convert from ascii */
-          ascii2spp(&skadrspp, *strpp);
-    	    ifr.ifr_addr = skadrspp;
+          ascii2spp(&(skadrspp->sspp_addr), *strpp);
+    	    ifr.ifr_addr = *(struct sockaddr *) &skadrspp;
     	    if (ioctl(skfd, SIOCSIFADDR, &ifr) < 0) {
         		fprintf(stderr, "SIOCSIFADDR: %s\n", strerror(errno));
         		goterr = 1;
@@ -361,8 +386,8 @@ int main(int argc, char **argv)
             usage();
 
           /* get the spp address and convert from ascii */
-          ascii2spp(&skadrspp, *strpp);
-          ifr.ifr_addr = skadrspp;
+          ascii2spp(&(skadrspp->sspp_addr), *strpp);
+          ifr.ifr_addr = *(struct sockaddr *) &skadrspp;
           if (ioctl(skfd, SIOCDIFADDR, &ifr) < 0) {
             fprintf(stderr, "SIOCDIFADDR: %s\n", strerror(errno));
             goterr = 1;
