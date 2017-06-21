@@ -72,7 +72,7 @@ static int spp_seq_socket_show(struct seq_file *seq, void *v)
         goto out;
     }
     s = v;
-    spp = spp_sock(s);
+    spp = spp_sk(s);
     if (!spp->device || (dev = spp->device) == NULL)
         devname = "???";
     else

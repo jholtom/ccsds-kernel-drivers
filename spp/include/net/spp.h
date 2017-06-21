@@ -62,21 +62,25 @@ extern spinlock_t spp_list_lock;
 
 /* af_spp.c */
 extern int sysctl_spp_idle_timer;
+
 /* spp_addr.c */
 extern void spp2ascii(char *buf, const spp_address *addr);
 extern void asii2spp(spp_address *addr, const char *buf);
 extern int sppcmp(const spp_address *addr1, const spp_address *addr2);
 extern int sppval(const spp_address *addr);
+
 /* spp_loopback.c */
 
 /* spp_methods.c */
 extern void spp_disconnect(struct sock *sk, int reason, unsigned char cause, unsigned char diagnostic);
 extern int spp_kiss_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev);
+
 /* spp_out.c */
 
 /* spp_proc.c */
 extern int spp_proc_init(void);
 extern void spp_proc_exit(void);
+
 /* sysctl_net_spp.c */
 #ifdef CONFIG_SYSCTL
 extern void spp_register_sysctl(void);
