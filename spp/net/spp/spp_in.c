@@ -18,6 +18,14 @@
  *
  */
 
+#include <linux/errno.h>
+#include <linux/kernel.h>
+#include <linux/string.h>
+#include <linux/skbuff.h>
+#include <net/sock.h>
+#include <net/tcp_states.h>
+#include <net/spp.h>
+
 int spp_process_rx(struct sock *sk, struct sk_buff *skb)
 {
     /* TODO: complete implemnetation */
