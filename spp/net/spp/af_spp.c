@@ -577,6 +577,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                     goto out;
                 /* TODO: set the interface address */
                 printk(KERN_INFO "SPP: IOCTL: Set Interface Address\n");
+                rc = 0;
                 break;
         }
         case SIOCSIFFLAGS: {
@@ -585,11 +586,13 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                     goto out;
                 /* TODO: change device flags...data from ifr.ifr_flags applied to dev*/
                 printk(KERN_INFO "SPP: IOCTL: Set Interface Flags\n");
+                rc = 0;
                 break;
         }
         case SIOCGIFFLAGS: {
                 /* TODO: Return current flags...*/
                 printk(KERN_INFO "SPP: IOCTL: Get Interface Flags\n");
+                rc = 0;
                 break;
         }
         case SIOCGIFMTU: {
