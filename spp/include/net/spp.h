@@ -55,10 +55,10 @@ static inline struct spp_sock *spp_sk(const struct sock *sk)
     return (struct spp_sock *)sk;
 }
 
-typedef struct spp_dev {
+typedef struct {
     struct spp_dev *next;
     struct net_device *dev;
-};
+} spp_dev;
 
 extern struct hlist_head spp_list;
 extern spinlock_t spp_list_lock;
