@@ -91,9 +91,6 @@ extern int sppcmp(const spp_address *addr1, const spp_address *addr2);
 extern int sppval(const spp_address *addr);
 
 /* spp_dev.c */
-extern spp_dev *spp_dev_list;
-extern spinlock_t spp_dev_lock;
-
 static inline spp_dev *spp_dev_sppdev(struct net_device *dev)
 {
     return dev->spp_ptr;
