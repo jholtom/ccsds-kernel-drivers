@@ -103,10 +103,10 @@ extern void spp_dev_device_up(struct net_device *);
 extern void spp_dev_device_down(struct net_device *);
 extern void spp_dev_free(void);
 
-extern static void spp_free_ifa(struct spp_ifaddr *ifa);
-extern static int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa);
-extern static struct spp_ifaddr *spp_alloc_ifa(void);
-extern static int spp_del_ifa(struct spp_device *spp_dev, struct spp_ifaddr **ifap, int destroy);
+extern void spp_free_ifa(struct spp_ifaddr *ifa);
+extern int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa);
+extern struct spp_ifaddr *spp_alloc_ifa(void);
+extern int spp_del_ifa(struct spp_device *spp_dev, struct spp_ifaddr **ifap, int destroy);
 
 /* spp_loopback.c */
 

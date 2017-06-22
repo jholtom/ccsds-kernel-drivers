@@ -162,12 +162,12 @@ static int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pi
     return 0;
 }
 
-static int spp_insert_ifa(struct spp_ifaddr *ifa)
+int spp_insert_ifa(struct spp_ifaddr *ifa)
 {
     return __spp_insert_ifa(ifa, NULL, 0)
 }
 
-static int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
+int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
 {
     struct spp_dev *spp_device = __spp_dev_get_rtnl(dev);
 
@@ -180,12 +180,12 @@ static int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
     return spp_insert_ifa(ifa)
 }
 
-static struct spp_ifaddr *spp_alloc_ifa(void)
+struct spp_ifaddr *spp_alloc_ifa(void)
 {
     return kzalloc(sizeof(struct spp_ifaddr), GFP_KERNEL);
 }
 
-static int spp_del_ifa(struct spp_device *spp_dev, struct spp_ifaddr **ifap, int destroy)
+int spp_del_ifa(struct spp_device *spp_dev, struct spp_ifaddr **ifap, int destroy)
 {
 
 }
