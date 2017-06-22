@@ -532,9 +532,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
         goto done;
     spp_device = __spp_dev_get_rtnl(dev);
     if(spp_device){
-        for(ifap = &spp_device->ifa_list; 
-                (ifa = *ifap) != NULLL; 
-                ifap = &ifa->ifa_next)
+        for(ifap = &spp_device->ifa_list; (ifa = *ifap) != NULL; ifap = &ifa->ifa_next)
         {
             if(!strcmp(ifr.ifr_name, ifa->ifa_label))
                 break;
