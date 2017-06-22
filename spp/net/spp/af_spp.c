@@ -510,18 +510,25 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     int rc = -EFAULT;
     int tryaddrmatch = 0;
     lock_kernel();
+    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     /* Bring the user request into kernel space */
     if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
         goto out;
     ifr.ifr_name[IFNAMSIZ - 1] = 0; /* Why? */
 
+    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     memcpy(&sin_orig,sin, sizeof(*sin)); /* Copy the old address for comparison */
 
+    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     dev_load(spp, ifr.ifr_name);
 
+    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     rtnl_lock();
+
+    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     rc = -ENODEV;
     dev = __dev_get_by_name(spp, ifr.ifr_name);
+    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     if(!dev)
         goto done;
 
