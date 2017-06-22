@@ -410,7 +410,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
     lock_kernel();
 
-    if(msg->msg_flags & ~(MSG_DONTWAIT|MSB_OOB|MSG_EOR|MSG_CMSG_COMPAT))
+    if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_OOB|MSG_EOR|MSG_CMSG_COMPAT))
         goto out;
 
     if(!(msg->msg_flags & (MSG_EOF)))
@@ -463,7 +463,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     SOCK_DEBUG(sk, "SPP: Adding user data\n");
 
     if(memcpy_fromiovec(skb_put(skb,len), msg->msg_iov, len)){
-        err = -EFAULT;
+        rc = -EFAULT;
         kfree_skb(skb);
         goto out;
     }
