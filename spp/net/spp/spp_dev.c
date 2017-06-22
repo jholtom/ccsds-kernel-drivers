@@ -43,6 +43,8 @@
 spp_dev *spp_dev_list;
 DEFINE_SPINLOCK(spp_dev_lock);
 
+static BLOCKING_NOTIFIER_HEAD(sppaddr_chain);
+
 spp_dev *spp_addr_sppdev(spp_address *addr)
 {
     spp_dev *spp_dev, *result = NULL;
@@ -119,6 +121,85 @@ void spp_dev_device_down(struct net_device *dev)
     spp_register_sysctl();
     printk(KERN_INFO "SPP: Brought device down");
 }
+
+static void spp_free_ifa(struct spp_ifaddr *ifa)
+{
+    kfree(&(ifa->ifa_dev));
+    kfree(ifa);
+    /*TODO/FIXME: Fix this so I absolutely do not leak memory and properly use RCU instead of not using it...*/
+}
+
+static int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
+{
+    struct spp_dev *spp_Device = ifa->ifa_dev;
+    struct spp_ifaddr *ifa1, **ifap, **last_primary;
+
+    ASSERT_RTNL();
+    if(!ifa->ifa_local){
+        spp_free_ifa(ifa);
+        return 0;
+    }
+
+    ifa->ifa_flags &= ~IFA_F_SECONDARY;
+    last_primary = &spp_device->ifa_list;
+    for(ifap = &spp_device->ifa_list; (ifa1 = *ifap) != NULL; ifap = &ifa1->ifa_next){
+        if(!(ifa1->ifa_flags & IFA_F_SECONDARY))
+            last_primary = &ifa1->ifa_next;
+        if(ifa1->ifa_lcaol == ifa->ifa_local){
+            inet_free_ifa(ifa);
+            return -EEXIST;
+        }
+        ifa->ifa_flags |= IFA_F_SECONDARY;
+    }
+    if(!(ifa->ifa_flags & IFA_F_SECONDARY)){
+        net_srandom(ifa->ifa_local);
+        ifap = last_primary;
+    }
+    ifa->ifa_next = *ifap;
+    *ifap = ifa;
+    rtmsg_ifa(RTM_NEWADDR, ifa, nlh, pid);
+    blocking_notifier_call_chain(&sppaddr_chain, NETDEV_UP, ifa);
+    return 0;
+}
+
+static int spp_insert_ifa(struct spp_ifaddr *ifa)
+{
+    return __spp_insert_ifa(ifa, NULL, 0)
+}
+
+static int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
+{
+    struct spp_dev *spp_device = __spp_dev_get_rtnl(dev);
+
+    ASSERT_RTNL();
+
+    if(!spp_device){
+        spp_free_ifa(ifa);
+        return -ENOBUFS;
+    }
+    return spp_insert_ifa(ifa)
+}
+
+static struct spp_ifaddr *spp_alloc_ifa(void)
+{
+    return kzalloc(sizeof(struct spp_ifaddr), GFP_KERNEL);
+}
+
+static int spp_del_ifa(struct spp_device *spp_dev, struct spp_ifaddr **ifap, int destroy)
+{
+
+}
+
+int register_sppaddr_notifier(struct notifier_block *nb)
+{
+    return blocking_notifier_chain_register(&sppaddr_chain, nb);
+}
+EXPORT_SYMBOL(register_sppaddr_notifier);
+int unregister_sppaddr_notifier(struct notifier_block *nb)
+{
+    return blocking_notifier_chain_unregister(&sppaddr_chain, nb);
+}
+EXPORT_SYMBOL(unregister_sppaddr_notifier);
 
 void __exit spp_dev_free(void)
 {

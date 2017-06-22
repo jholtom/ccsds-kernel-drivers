@@ -510,9 +510,11 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     struct ifreq ifr;
     struct sockaddr_spp sin_orig;
     struct sockaddr_spp *sin = (struct sockaddr_spp *)&ifr.ifr_addr;
+    struct spp_dev *spp_device;
+    struct spp_ifaddr **ifap = NULL;
+    struct spp_ifaddr *ifa = NULL;
     struct net_device *dev;
     int rc = -EFAULT;
-    int tryaddrmatch = 0;
     lock_kernel();
     /* Bring the user request into kernel space */
     if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
@@ -528,7 +530,14 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 
     if(!dev)
         goto done;
-
+    spp_device = __spp_dev_get_rtnl(dev);
+    if(spp_device){
+        for(ifap = &spp_device->ifa_list; (ifa = *ifap) != NULL; ifap = &ifa->ifa_next)
+        {
+            if(!strcmp(ifr.ifr_name, ifa->ifa_label))
+                break;
+        }
+    }
     switch (cmd) {
         case TIOCOUTQ: {
             int amount = sk->sk_sndbuf - sk_wmem_alloc_get(sk);
@@ -560,10 +569,9 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                 break;
         }
         case SIOCGIFADDR: {
-                tryaddrmatch = (sin_orig.sspp_family == AF_SPP);
                 memset(sin, 0, sizeof(*sin));
                 sin->sspp_family = AF_SPP;
-                /*sin->sspp_addr = 1; TODO: get the current interface address */
+                sin->sspp_addr.spp_apid = ifa->ifa_local;
                 printk(KERN_INFO "SPP: IOCTL: Get Interface Address\n");
                 goto rarok;
         }
@@ -574,9 +582,25 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                 rc = -EINVAL;
                 if (sin->sspp_family != AF_SPP)
                     goto out;
-                /* TODO: set the interface address */
+                if(!sppval(&(sin->sspp_addr)))
+                    break;
+                if(!ifa){
+                    rc = -ENOBUFS;
+                    ifa = spp_alloc_ifa();
+                    if(!ifa)
+                        break;
+                    memcpy(ifa->ifa_label, dev->name, IFNAMSIZ);
+                }
+                else
+                {
+                    rc = 0;
+                    if(ifa->ifa_local == sin->sspp_addr.spp_apid)
+                        break;
+                    spp_del_ifa(spp_device, ifap, 0);
+                }
+                ifa->ifa_address = ifa->ifa_local = sin->sspp_addr.spp_apid;
                 printk(KERN_INFO "SPP: IOCTL: Set Interface Address\n");
-                rc = 0;
+                rc = spp_set_ifa(dev, ifa);
                 break;
         }
         case SIOCSIFFLAGS: {

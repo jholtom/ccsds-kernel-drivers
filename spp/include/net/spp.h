@@ -32,6 +32,9 @@
 
 #define SPP_OUT_OF_ORDER 0
 
+#define IFA_F_SECONDARY 0x01
+#define IFA_F_TEMPORARY IFA_F_SECONDARY
+
 #define SPP_PKTTYPE 27 /* TODO: fix location of this (maybe), and assign a better value */
 
 struct spp_entity {
@@ -55,9 +58,19 @@ static inline struct spp_sock *spp_sk(const struct sock *sk)
     return (struct spp_sock *)sk;
 }
 
+struct spp_ifaddr {
+    struct spp_ifaddr *ifa_next;
+    struct spp_dev *spp_dev;
+    unsigned int ifa_local;
+    unsigned int ifa_address;
+    unsigned char ifa_flags;
+    char ifa_label[IFNAMSIZ];
+};
+
 typedef struct {
     struct spp_dev *next;
     struct net_device *dev;
+    struct spp_ifaddr *ifa_list;
 } spp_dev;
 
 extern struct hlist_head spp_list;
@@ -65,6 +78,11 @@ extern spinlock_t spp_list_lock;
 
 /* af_spp.c */
 extern int sysctl_spp_idle_timer;
+
+static __inline struct spp_dev * __spp_dev_get_rtnl(const struct net_device *dev)
+{
+    return (struct spp_dev*)dev->spp_ptr;
+}
 
 /* spp_addr.c */
 extern void spp2ascii(char *buf, const spp_address *addr);
@@ -84,6 +102,11 @@ extern spp_dev *spp_addr_sppdev(spp_address *);
 extern void spp_dev_device_up(struct net_device *);
 extern void spp_dev_device_down(struct net_device *);
 extern void spp_dev_free(void);
+
+extern static void spp_free_ifa(struct spp_ifaddr *ifa);
+extern static int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa);
+extern static struct spp_ifaddr *spp_alloc_ifa(void);
+extern static int spp_del_ifa(struct spp_device *spp_dev, struct spp_ifaddr **ifap, int destroy);
 
 /* spp_loopback.c */
 
