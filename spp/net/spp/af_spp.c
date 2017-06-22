@@ -245,16 +245,16 @@ static int spp_device_event(struct notifier_block *this, unsigned long event, vo
     if (dev->type == ARPHRD_SLIP){
         switch(event) {
             case NETDEV_UP:
-                /* TODO: Probably just initialize the idle timer here
-                 * spp_link_device_up(dev);*/
+                spp_dev_device_up(dev);
                 break;
-            case NETDEV_GOING_DOWN:
-                /* TODO: probably just kill off the idle timer here
-                spp_terminate_link(); */
+                /*case NETDEV_GOING_DOWN:
+                TODO: probably just kill off the idle timer here
+                spp_terminate_link();
                 break;
+                TODO: Add other types of NETDEV events just in case */
             case NETDEV_DOWN:
                 spp_kill_by_device(dev);
-                /* spp_link_device_down(dev); TODO: probably don't need since we are point to point and have no "links" */
+                spp_dev_device_down(dev);
                 break;
         }
     }
@@ -510,22 +510,18 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     int rc = -EFAULT;
     int tryaddrmatch = 0;
     lock_kernel();
-    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     /* Bring the user request into kernel space */
     if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
         goto out;
     ifr.ifr_name[IFNAMSIZ - 1] = 0; /* Why? */
-    printk(KERN_ALERT "SPP: DEBUG: ifreq.ifr_name = %s \n",ifr.ifr_name);
-    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
+
     memcpy(&sin_orig,sin, sizeof(*sin)); /* Copy the old address for comparison */
 
-    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     rtnl_lock();
 
-    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     rc = -ENODEV;
     dev = __dev_get_by_name(&init_net, ifr.ifr_name);
-    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
+
     if(!dev)
         goto done;
 
@@ -572,7 +568,6 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                 if(!capable(CAP_NET_ADMIN))
                     goto out;
                 rc = -EINVAL;
-                printk("SPP: DEBUG: Input socket family: %d \n",sin->sspp_family); 
                 if (sin->sspp_family != AF_SPP)
                     goto out;
                 /* TODO: set the interface address */
