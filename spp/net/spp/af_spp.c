@@ -524,7 +524,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 
     printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     rc = -ENODEV;
-    dev = __dev_get_by_name(spp, ifr.ifr_name);
+    dev = __dev_get_by_name(&init_net, ifr.ifr_name);
     printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     if(!dev)
         goto done;
