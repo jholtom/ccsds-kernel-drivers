@@ -28,7 +28,7 @@
 #define SPP_HEADER_LEN 32 /* 32 bit header length */
 #define SPP_APID_LEN 11 /* 11 bit APID length */
 
-#define SPP_DEFAULT_IDLE (180 * HZ) 
+#define SPP_DEFAULT_IDLE (180 * HZ)
 
 #define SPP_OUT_OF_ORDER 0
 
@@ -55,10 +55,10 @@ static inline struct spp_sock *spp_sk(const struct sock *sk)
     return (struct spp_sock *)sk;
 }
 
-struct spp_dev {
+typedef struct {
     struct spp_dev *next;
     struct net_device *dev;
-};
+} spp_dev;
 
 extern struct hlist_head spp_list;
 extern spinlock_t spp_list_lock;
@@ -71,6 +71,19 @@ extern void spp2ascii(char *buf, const spp_address *addr);
 extern void asii2spp(spp_address *addr, const char *buf);
 extern int sppcmp(const spp_address *addr1, const spp_address *addr2);
 extern int sppval(const spp_address *addr);
+
+/* spp_dev.c */
+extern spp_dev *spp_dev_list;
+extern spinlock_t spp_dev_lock;
+
+static inline spp_dev *spp_dev_sppdev(struct net_device *dev)
+{
+    return dev->spp_ptr;
+}
+extern spp_dev *spp_addr_sppdev(spp_address *);
+extern void spp_dev_device_up(struct net_device *);
+extern void spp_dev_device_down(struct net_device *);
+extern void spp_dev_free(void);
 
 /* spp_loopback.c */
 
