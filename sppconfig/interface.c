@@ -94,6 +94,7 @@ static struct interface *int_list, *int_last;
 
 static int if_readlist_proc(const char *);
 
+/* add the to the int_list */
 static struct interface *if_cache_add(const char *name)
 {
     struct interface *ife, **nextp, *new;
@@ -137,11 +138,13 @@ struct interface *lookup_interface(const char *name)
 
 int for_all_interfaces(int (*doit) (struct interface *, void *), void *cookie)
 {
+  printf("interface: for_all_interfaces \n");
     struct interface *ife;
 
     if (!if_list_all && (if_readlist() < 0))
 	   return -1;
     for (ife = int_list; ife; ife = ife->next) {
+      printf("interface: for_all_interfaces: ife->name = %s\n", ife->name);
     	int err = doit(ife, cookie);
     	if (err)
 	     return err;
@@ -183,25 +186,25 @@ static int if_readconf(void)
 
     ifc.ifc_buf = NULL;
     for (;;) {
-	ifc.ifc_len = sizeof(struct ifreq) * numreqs;
-	ifc.ifc_buf = xrealloc(ifc.ifc_buf, ifc.ifc_len);
+    	ifc.ifc_len = sizeof(struct ifreq) * numreqs;
+    	ifc.ifc_buf = xrealloc(ifc.ifc_buf, ifc.ifc_len);
 
-	if (ioctl(skfd, SIOCGIFCONF, &ifc) < 0) {
-	    perror("SIOCGIFCONF");
-	    goto out;
-	}
-	if (ifc.ifc_len == sizeof(struct ifreq) * numreqs) {
-	    /* assume it overflowed and try again */
-	    numreqs *= 2;
-	    continue;
-	}
-	break;
+    	if (ioctl(skfd, SIOCGIFCONF, &ifc) < 0) {
+    	    perror("SIOCGIFCONF");
+    	    goto out;
+    	}
+    	if (ifc.ifc_len == sizeof(struct ifreq) * numreqs) {
+    	    /* assume it overflowed and try again */
+    	    numreqs *= 2;
+    	    continue;
+    	}
+    	break;
     }
 
     ifr = ifc.ifc_req;
     for (n = 0; n < ifc.ifc_len; n += sizeof(struct ifreq)) {
-	if_cache_add(ifr->ifr_name);
-	ifr++;
+    	if_cache_add(ifr->ifr_name);
+    	ifr++;
     }
     err = 0;
 
@@ -292,29 +295,31 @@ static int get_dev_fields(const char *bp, struct interface *ife)
 	ife->stats.rx_multicast = 0;
 	break;
     case 1:
-	sscanf(bp, "%Lu %lu %lu %lu %lu %Lu %lu %lu %lu %lu %lu",
-	       &ife->stats.rx_packets,
-	       &ife->stats.rx_errors,
-	       &ife->stats.rx_dropped,
-	       &ife->stats.rx_fifo_errors,
-	       &ife->stats.rx_frame_errors,
+    	sscanf(bp, "%Lu %lu %lu %lu %lu %Lu %lu %lu %lu %lu %lu",
+    	       &ife->stats.rx_packets,
+    	       &ife->stats.rx_errors,
+    	       &ife->stats.rx_dropped,
+    	       &ife->stats.rx_fifo_errors,
+    	       &ife->stats.rx_frame_errors,
 
-	       &ife->stats.tx_packets,
-	       &ife->stats.tx_errors,
-	       &ife->stats.tx_dropped,
-	       &ife->stats.tx_fifo_errors,
-	       &ife->stats.collisions,
-	       &ife->stats.tx_carrier_errors);
-	ife->stats.rx_bytes = 0;
-	ife->stats.tx_bytes = 0;
-	ife->stats.rx_multicast = 0;
-	break;
+    	       &ife->stats.tx_packets,
+    	       &ife->stats.tx_errors,
+    	       &ife->stats.tx_dropped,
+    	       &ife->stats.tx_fifo_errors,
+    	       &ife->stats.collisions,
+    	       &ife->stats.tx_carrier_errors);
+      ife->stats.rx_bytes = 0;
+      ife->stats.tx_bytes = 0;
+      ife->stats.rx_multicast = 0;
+    	break;
     }
     return 0;
 }
 
 static int if_readlist_proc(const char *target)
 {
+    printf("interface: if_readlist_proc\n");
+
     FILE *fh;
     char buf[512];
     struct interface *ife;
@@ -359,18 +364,18 @@ static int if_readlist_proc(const char *target)
 
     err = 0;
     while (fgets(buf, sizeof buf, fh)) {
-	const char *s;
-	char name[IFNAMSIZ];
-	s = get_name(name, buf);
-	ife = if_cache_add(name);
-	get_dev_fields(s, ife);
-	ife->statistics_valid = 1;
-	if (target && !strcmp(target,name))
-		break;
-    }
-    if (ferror(fh)) {
-	perror(_PATH_PROCNET_DEV);
-	err = -1;
+    	const char *s;
+    	char name[IFNAMSIZ];
+    	s = get_name(name, buf);
+    	ife = if_cache_add(name);
+    	get_dev_fields(s, ife);
+    	ife->statistics_valid = 1;
+    	if (target && !strcmp(target,name))
+    		break;
+        }
+        if (ferror(fh)) {
+    	perror(_PATH_PROCNET_DEV);
+    	err = -1;
     }
 
 #if 0
@@ -385,6 +390,7 @@ int if_readlist(void)
     /* caller will/should check not to call this too often
      *   (i.e. only if if_list_all == 0
      */
+     printf ("interface: if_readlist\n");
     int proc_err, conf_err;
 
     proc_err = if_readlist_proc(NULL);
@@ -411,6 +417,7 @@ static int ipx_getaddr(int sock, int ft, struct ifreq *ifr)
 /* Fetch the interface configuration from the kernel. */
 int if_fetch(struct interface *ife)
 {
+    printf("interface: if_fetch\n");
     struct ifreq ifr;
     //int fd;
     const char *ifname = ife->name;
@@ -564,6 +571,7 @@ int if_fetch(struct interface *ife)
 
 int do_if_fetch(struct interface *ife)
 {
+  printf("interface: do_if_fetch\n");
     if (if_fetch(ife) < 0) {
     	const char *errmsg;
     	if (errno == ENODEV) {
@@ -581,6 +589,7 @@ int do_if_fetch(struct interface *ife)
 
 int do_if_print(struct interface *ife, void *cookie)
 {
+    printf("interface: do_if_print\n");
     int *opt_a = (int *) cookie;
     int res;
 
@@ -646,6 +655,7 @@ void ife_print_short(struct interface *ptr)
 
 void ife_print_long(struct interface *ptr)
 {
+    printf("interface: ife_print_long\n");
     const struct aftype *ap;
     const struct hwtype *hw;
     int hf;
@@ -958,8 +968,9 @@ void ife_print_long(struct interface *ptr)
 
 void ife_print(struct interface *i)
 {
+    printf("interface: ife_print\n");
     if (ife_short)
-	ife_print_short(i);
+	     ife_print_short(i);
     else
-	ife_print_long(i);
+	     ife_print_long(i);
 }
