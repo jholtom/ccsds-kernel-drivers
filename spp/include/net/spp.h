@@ -67,11 +67,11 @@ struct spp_ifaddr {
     char ifa_label[IFNAMSIZ];
 };
 
-typedef struct spp_dev {
+struct spp_dev {
     struct spp_dev *next;
     struct net_device *dev;
     struct spp_ifaddr *ifa_list;
-} spp_dev_t;
+};
 
 extern struct hlist_head spp_list;
 extern spinlock_t spp_list_lock;
