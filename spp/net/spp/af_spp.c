@@ -608,6 +608,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 done:
     rtnl_unlock();
 out:
+    rtnl_unlock();
     return rc;
 rarok:
     rtnl_unlock();
