@@ -300,6 +300,7 @@ fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
 	    addr_family = ap->af;
       skfd = ap->fd;
     }
+    skadrspp.sspp_family = AF_SPP;
 
 
 
@@ -388,7 +389,6 @@ fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
 
     	    if (*++strpp == NULL)
     		    usage();
-
           /* get the spp address and convert from ascii */
           ascii2spp(&(skadrspp.sspp_addr), *strpp);
           printf( "sppconfig: address to add = %d\n", skadrspp.sspp_addr.spp_apid);
@@ -410,7 +410,6 @@ fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
           /* make sure they included an address */
           if (*++strpp == NULL)
             usage();
-
           /* get the spp address and convert from ascii */
           ascii2spp(&(skadrspp.sspp_addr), *strpp);
           ifr.ifr_addr = *((struct sockaddr *) &skadrspp);
