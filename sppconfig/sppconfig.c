@@ -109,23 +109,25 @@ int sppval(const spp_address *addr)
 
 static int if_print(char *ifname)
 {
+  printf("sppconfig: if_print if = %s\n\r", ifname != NULL ? ifname : "all");
+  fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
     int res;
 
-    if (ife_short)
-	printf(_("Iface      MTU    RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg\n"));
+    if (ife_short) /* -s flag was passed */
+	   printf(_("Iface      MTU    RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg\n"));
 
     if (!ifname) {
-	res = for_all_interfaces(do_if_print, &opt_a);
+	     res = for_all_interfaces(do_if_print, &opt_a);
     } else {
-	struct interface *ife;
+    	struct interface *ife;
 
-	ife = lookup_interface(ifname);
-	if (!ife) {
-		return -1;
-	}
-	res = do_if_fetch(ife);
-	if (res >= 0)
-	    ife_print(ife);
+    	ife = lookup_interface(ifname);
+    	if (!ife) {
+    		return -1;
+    	}
+    	res = do_if_fetch(ife);
+    	if (res >= 0)
+    	    ife_print(ife);
     }
     return res;
 }
@@ -133,6 +135,9 @@ static int if_print(char *ifname)
 /* Set a certain interface flag. */
 static int set_flag(char *ifname, short flag)
 {
+  printf("sppconfig: set_flag\n\r");
+  fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
+
     struct ifreq ifr;
 
     safe_strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
@@ -193,11 +198,8 @@ static void usage(void)
     fprintf(stderr, _("Usage:\n  sppconfig [-a] [-v] [-s] <interface> \n"));
     fprintf(stderr, _("  [[-]pointopoint] [mtu <NN>] [[-]arp]\n"));
     fprintf(stderr, _("  [add <address>] [del <address>] [media <type>]\n"));
-#ifdef HAVE_TXQUEUELEN
-    fprintf(stderr, _("  [txqueuelen <NN>]\n"));
-#endif
-    fprintf(stderr, _("  [up|down] ...\n\n"));
-    fprintf(stderr, _("  Address family default: %s\n"), DFLT_AF);
+    fprintf(stderr, _("  [txqueuelen <NN>] [up|down]\n\n"));
+    fprintf(stderr, _("  Address family default: %s\n\n"), DFLT_AF);
     exit(E_USAGE);
 }
 
@@ -214,8 +216,7 @@ int main(int argc, char **argv)
   //  struct sockaddr_in *sin = (struct sockaddr_in *)&_sa;
 
     /* FIXME: Properly declare a sockaddr_spp */
-    struct sockaddr_spp _sa;
-    struct sockaddr_spp *skadrspp = &_sa;
+    struct sockaddr_spp skadrspp;
 
     char host[128];
     const struct aftype *ap;
@@ -228,6 +229,9 @@ int main(int argc, char **argv)
     bindtextdomain("net-tools", "/usr/share/locale");
     textdomain("net-tools");
 #endif
+
+printf( "sppconfig: parsing initial arguments\n\r");
+fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
 
     /* Find any options that preceed the interface name.*/
     argc--;
@@ -261,6 +265,9 @@ int main(int argc, char **argv)
     	argc--;
     }
 
+printf( "sppconfig: opening af socket\n\r");
+fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
+
     /* Create a channel to the NET kernel. */
     if ((skfd = sockets_open(0)) < 0) {
     	perror("socket"); /* FIXME: sockets_open doesn't set errno */
@@ -283,6 +290,8 @@ int main(int argc, char **argv)
     	(void) close(skfd);
     	exit(err < 0);
     }
+printf("sppconfig: got interface name = %s\n\r", ifr.ifr_name);
+fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
 
     /* Get the address family (default only)*/
     ap = get_aftype(DFLT_AF);
@@ -292,8 +301,13 @@ int main(int argc, char **argv)
       skfd = ap->fd;
     }
 
+
+
     /* Process the remaining arguments. */
     while (*strpp != (char *) NULL) {
+      printf("sppconfig: processing arguments after interface\n\r");
+      fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
+
     	if (!strcmp(*strpp, "arp")) {
     	    goterr |= clr_flag(ifr.ifr_name, IFF_NOARP);
     	    strpp++;
@@ -354,6 +368,9 @@ int main(int argc, char **argv)
 #endif
 
     	if (!strcmp(*strpp, "up")) {
+        printf("sppconfig: found up argument\n\r");
+        fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
+
     	    goterr |= set_flag(ifr.ifr_name, (IFF_UP | IFF_RUNNING));
     	    strpp++;
     	    continue;
@@ -366,12 +383,21 @@ int main(int argc, char **argv)
 
       if (!strcmp(*strpp, "add")) {
           /* make sure they included an address */
+          printf("sppconfig: found add argument\n\r");
+          fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
+
     	    if (*++strpp == NULL)
     		    usage();
 
           /* get the spp address and convert from ascii */
-          ascii2spp(&(skadrspp->sspp_addr), *strpp);
-    	    ifr.ifr_addr = *(struct sockaddr *) &skadrspp;
+          ascii2spp(&(skadrspp.sspp_addr), *strpp);
+          printf( "sppconfig: address to add = %d\n", skadrspp.sspp_addr.spp_apid);
+          fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
+
+          ifr.ifr_addr = *((struct sockaddr *) &skadrspp);
+          printf( "sppconfig: added sockaddr to ifr.ifr_addr\n");
+          fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
+
     	    if (ioctl(skfd, SIOCSIFADDR, &ifr) < 0) {
         		fprintf(stderr, "SIOCSIFADDR: %s\n", strerror(errno));
         		goterr = 1;
@@ -386,8 +412,8 @@ int main(int argc, char **argv)
             usage();
 
           /* get the spp address and convert from ascii */
-          ascii2spp(&(skadrspp->sspp_addr), *strpp);
-          ifr.ifr_addr = *(struct sockaddr *) &skadrspp;
+          ascii2spp(&(skadrspp.sspp_addr), *strpp);
+          ifr.ifr_addr = *((struct sockaddr *) &skadrspp);
           if (ioctl(skfd, SIOCDIFADDR, &ifr) < 0) {
             fprintf(stderr, "SIOCDIFADDR: %s\n", strerror(errno));
             goterr = 1;
@@ -437,6 +463,8 @@ int main(int argc, char **argv)
     	strpp++;
     }
 
+    printf("sppconfig: found all options, returning\n\r");
+    fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
 
 
     if (opt_v && goterr)

@@ -61,7 +61,7 @@ spp_address spp_addr; /* Current address of the local entity */
 
 static const struct proto_ops spp_proto_ops; /* Forward define the protocol ops */
 
-/*  
+/*
  * Remove Socket (interrupt safe)
  */
 static void spp_remove_sock(struct sock *sk)
@@ -71,8 +71,8 @@ static void spp_remove_sock(struct sock *sk)
     spin_unlock_bh(&spp_list_lock); /* Release lock on socket list */
 }
 
-/* 
- * Kill all bound sockets on a device that dropped 
+/*
+ * Kill all bound sockets on a device that dropped
  */
 static void spp_kill_by_device(struct net_device *dev)
 {
@@ -101,7 +101,7 @@ static void spp_insert_socket(struct sock *sk)
 
 void spp_destroy_socket(struct sock *); /* Forward definition of socket destroy */
 
-/* 
+/*
  * Handles deferred socket kills on a timer
  */
 static void spp_destroy_timer(unsigned long data)
@@ -179,7 +179,7 @@ out:
 static int spp_listen(struct socket *sock, int backlog)
 {
     struct sock *sk = sock->sk; /* Gets the socket representation */
-    /* TODO: verify functionality and correctness */ 
+    /* TODO: verify functionality and correctness */
     if(sk->sk_state != TCP_LISTEN){ /* If it is not already in a listening state */
         struct spp_sock *spp = spp_sk(sk); /* Get the SPP specific representation */
 
@@ -515,17 +515,21 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
         goto out;
     ifr.ifr_name[IFNAMSIZ - 1] = 0; /* Why? */
-
+    printk(KERN_ALERT "SPP: DEBUG: ifreq.ifr_name = %s \n",ifr.ifr_name);
     printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     memcpy(&sin_orig,sin, sizeof(*sin)); /* Copy the old address for comparison */
 
     printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
+    msleep_interruptible(1);
     dev_load(spp, ifr.ifr_name);
 
     printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
+    msleep_interruptible(1);
     rtnl_lock();
 
     printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
+    msleep_interruptible(1);
+    
     rc = -ENODEV;
     dev = __dev_get_by_name(spp, ifr.ifr_name);
     printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);

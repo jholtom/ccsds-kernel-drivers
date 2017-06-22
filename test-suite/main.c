@@ -24,9 +24,7 @@ int main() {
         perror("cannot create socket");
         return -1;
     }
-    while(1){
-        sleep(1);
-    }
+
     if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
         perror("bind failed");
         return -2;

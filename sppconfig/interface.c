@@ -140,11 +140,11 @@ int for_all_interfaces(int (*doit) (struct interface *, void *), void *cookie)
     struct interface *ife;
 
     if (!if_list_all && (if_readlist() < 0))
-	return -1;
+	   return -1;
     for (ife = int_list; ife; ife = ife->next) {
-	int err = doit(ife, cookie);
-	if (err)
-	    return err;
+    	int err = doit(ife, cookie);
+    	if (err)
+	     return err;
     }
     return 0;
 }
@@ -417,14 +417,14 @@ int if_fetch(struct interface *ife)
 
     safe_strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
     if (ioctl(skfd, SIOCGIFFLAGS, &ifr) < 0)
-	return (-1);
+	     return (-1);
     ife->flags = ifr.ifr_flags;
 
     safe_strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
     if (ioctl(skfd, SIOCGIFHWADDR, &ifr) < 0)
-	memset(ife->hwaddr, 0, 32);
+	     memset(ife->hwaddr, 0, 32);
     else
-	memcpy(ife->hwaddr, ifr.ifr_hwaddr.sa_data, 8);
+	     memcpy(ife->hwaddr, ifr.ifr_hwaddr.sa_data, 8);
 
     ife->type = ifr.ifr_hwaddr.sa_family;
 
@@ -560,21 +560,21 @@ int if_fetch(struct interface *ife)
 #endif
 
     return 0;
-}
+} /* if_fetch */
 
 int do_if_fetch(struct interface *ife)
 {
     if (if_fetch(ife) < 0) {
-	const char *errmsg;
-	if (errno == ENODEV) {
-	    /* Give better error message for this case. */
-	    errmsg = _("Device not found");
-	} else {
-	    errmsg = strerror(errno);
-	}
-  	fprintf(stderr, _("%s: error fetching interface information: %s\n"),
-		ife->name, errmsg);
-	return -1;
+    	const char *errmsg;
+    	if (errno == ENODEV) {
+    	    /* Give better error message for this case. */
+    	    errmsg = _("Device not found");
+    	} else {
+    	    errmsg = strerror(errno);
+    	}
+      	fprintf(stderr, _("%s: error fetching interface information: %s\n"),
+    		ife->name, errmsg);
+    	return -1;
     }
     return 0;
 }
