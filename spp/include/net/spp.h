@@ -35,7 +35,7 @@
 #define SPP_PKTTYPE 27 /* TODO: fix location of this (maybe), and assign a better value */
 
 struct spp_entity {
-/* An end of the connection - May not need because we have no true 'routing' support */
+    /* An end of the connection - May not need because we have no true 'routing' support */
 };
 
 struct spp_sock {
@@ -50,7 +50,10 @@ struct spp_sock {
     struct timer_list timer;
 };
 
-#define spp_sk(sk) ((struct spp_sock *)(sk))
+static inline struct spp_sock *spp_sk(const struct sock *sk)
+{
+    return (struct spp_sock *)sk;
+}
 
 struct spp_dev {
     struct spp_dev *next;

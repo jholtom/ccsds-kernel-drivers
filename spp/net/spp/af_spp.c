@@ -520,16 +520,9 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     memcpy(&sin_orig,sin, sizeof(*sin)); /* Copy the old address for comparison */
 
     printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
-    msleep_interruptible(1);
-    dev_load(spp, ifr.ifr_name);
-
-    printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
-    msleep_interruptible(1);
     rtnl_lock();
 
     printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
-    msleep_interruptible(1);
-    
     rc = -ENODEV;
     dev = __dev_get_by_name(spp, ifr.ifr_name);
     printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
