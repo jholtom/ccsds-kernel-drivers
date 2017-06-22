@@ -60,14 +60,78 @@ spp_dev *spp_addr_sppdev(spp_address *addr)
 }
 void spp_dev_device_up(struct net_device *dev)
 {
-    printk(KERN_INFO "SPP: Bringing device up");
+    spp_dev *spp_dev;
+
+    if((spp_dev = kzalloc(sizeof(*spp_dev),GFP_ATOMIC)) == NULL){
+        printk(KERN_ERR "SPP: spp_dev_device_up - out of memory\n");
+        return;
+    }
+    spp_unregister_sysctl();
+
+    dev->spp_ptr = spp_dev;
+    spp_dev->dev = dev;
+    dev_hold(dev);
+    /*    spp_dev->values[
+     *  TODO: set up idle value handling here later
+     */
+    spin_lock_bh(&spp_dev_lock);
+    spp_dev->next = spp_dev_list;
+    spp_dev_list = spp_dev;
+    spin_unlock_bh(&spp_dev_lock);
+
+    spp_register_sysctl();
+    printk(KERN_INFO "SPP: Brought device up\n");
 }
 void spp_dev_device_down(struct net_device *dev)
 {
-    printk(KERN_INFO "SPP: Bringing device down");
+    spp_dev *s, *spp_dev;
+    if((spp_dev = spp_dev_sppdev(dev)) == NULL)
+        return;
+
+    spp_unregister_sysctl();
+
+    spin_lock_bh(&spp_dev_lock);
+
+    if ((s = spp_dev_list) == spp_dev) {
+        spp_dev_list = s->next;
+        spin_unlock_bh(&spp_dev_lock);
+        dev_put(dev);
+        kfree(spp_dev);
+        spp_register_sysctl();
+        return;
+    }
+
+    while (s != NULL && s->next != NULL) {
+        if (s->next == spp_dev) {
+            s->next = spp_dev->next;
+            spin_unlock_bh(&spp_dev_lock);
+            dev_put(dev);
+            kfree(spp_dev);
+            spp_register_sysctl();
+            return;
+        }
+
+        s = s->next;
+    }
+
+    spin_unlock_bh(&spp_dev_lock);
+    dev->spp_ptr = NULL;
+    spp_register_sysctl();
+    printk(KERN_INFO "SPP: Brought device down");
 }
 
 void __exit spp_dev_free(void)
 {
+    spp_dev *s, *spp_dev;
 
+    spin_lock_bh(&spp_dev_lock);
+    spp_dev = spp_dev_list;
+    while(spp_dev != NULL){
+        s = spp_dev;
+        dev_put(spp_dev->dev);
+        spp_dev = spp_dev->next;
+        kfree(s);
+    }
+    spp_dev_list = NULL;
+    spin_unlock_bh(&spp_dev_lock);
 }

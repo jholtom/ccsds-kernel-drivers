@@ -294,7 +294,7 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
     spp_insert_socket(sk);
     sock_reset_flag(sk, SOCK_ZAPPED);
     release_sock(sk);
-    SOCK_DEBUG(sk, "spp_bind: socket is bound\n");
+    printk(KERN_INFO "spp_bind: socket is bound\n");
     /* TODO: Implement socket bind */
 
 out:
@@ -412,9 +412,10 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
     if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_OOB|MSG_EOR|MSG_CMSG_COMPAT))
         goto out;
-
     if(!(msg->msg_flags & (MSG_EOF)))
         goto out;
+
+    printk(KERN_INFO "SPP: Checked message flags and passed!\n");
 
     rc = -EADDRNOTAVAIL;
     if(sock_flag(sk,SOCK_ZAPPED))
@@ -425,11 +426,13 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         send_sig(SIGPIPE, current, 0);
         goto out;
     }
+    printk(KERN_INFO "SPP: Everything is still alive, lets go!\n");
 
     if(usspp) {
         rc = -EINVAL;
         if(msg->msg_namelen < sizeof(sspp))
             goto out;
+        printk(KERN_INFO "SPP: DEBUG: passed length check\n");
         memcpy(&sspp, usspp, sizeof(sspp));
         rc = -EISCONN;
         if (sppcmp(&(spp->d_addr), &sspp.sspp_addr))
@@ -437,6 +440,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         rc = -EINVAL;
         if(sspp.sspp_family != AF_SPP)
             goto out;
+        printk(KERN_INFO "SPP: DEBUG: passed AF type check\n");
     } else {
        rc = -ENOTCONN;
        if (sk->sk_state != TCP_ESTABLISHED)
@@ -449,7 +453,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         rc = -EMSGSIZE;
         goto out;
     }
-    SOCK_DEBUG(sk, "SPP: sendmsg: Addresses assembled. Making packet.\n");
+    printk(KERN_INFO "SPP: sendmsg: Addresses assembled. Making packet.\n");
 
     /* FIXME: we aren't doing OutOfBand data at all right now */
 
@@ -460,7 +464,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         goto out;
 
     skb_reserve(skb, size - len);
-    SOCK_DEBUG(sk, "SPP: Adding user data\n");
+    printk(KERN_INFO "SPP: Adding user data\n");
 
     if(memcpy_fromiovec(skb_put(skb,len), msg->msg_iov, len)){
         rc = -EFAULT;
@@ -470,7 +474,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
     skb_reset_network_header(skb);
 
-    SOCK_DEBUG(sk, "SPP: Transmitting buffer\n");
+    printk(KERN_INFO "SPP: Transmitting buffer\n");
 
 
 
