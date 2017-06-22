@@ -72,6 +72,19 @@ extern void asii2spp(spp_address *addr, const char *buf);
 extern int sppcmp(const spp_address *addr1, const spp_address *addr2);
 extern int sppval(const spp_address *addr);
 
+/* spp_dev.c */
+extern spp_dev *spp_dev_list;
+extern spinlock_t spp_dev_lock;
+
+static inline spp_dev *spp_dev_sppdev(struct net_device *dev)
+{
+    return dev->spp_ptr;
+}
+extern spp_dev *spp_addr_sppdev(spp_address *);
+extern void spp_dev_device_up(struct net_device *);
+extern void spp_dev_device_down(struct net_device *);
+extern void spp_dev_free(void);
+
 /* spp_loopback.c */
 
 /* spp_methods.c */
