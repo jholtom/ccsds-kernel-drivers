@@ -28,7 +28,7 @@
 #define SPP_HEADER_LEN 32 /* 32 bit header length */
 #define SPP_APID_LEN 11 /* 11 bit APID length */
 
-#define SPP_DEFAULT_IDLE (180 * HZ) 
+#define SPP_DEFAULT_IDLE (180 * HZ)
 
 #define SPP_OUT_OF_ORDER 0
 
@@ -55,7 +55,7 @@ static inline struct spp_sock *spp_sk(const struct sock *sk)
     return (struct spp_sock *)sk;
 }
 
-struct spp_dev {
+typedef struct spp_dev {
     struct spp_dev *next;
     struct net_device *dev;
 };
