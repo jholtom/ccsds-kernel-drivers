@@ -572,6 +572,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                 if(!capable(CAP_NET_ADMIN))
                     goto out;
                 rc = -EINVAL;
+                printk("SPP: DEBUG: Input socket family: %d \n",sin->sspp_family); 
                 if (sin->sspp_family != AF_SPP)
                     goto out;
                 /* TODO: set the interface address */
