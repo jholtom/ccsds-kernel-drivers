@@ -148,7 +148,7 @@ int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
     /*TODO: Set device options here*/
     if(ifa->spp_dev != spp_device){
         WARN_ON(ifa->spp_dev);
-        spp_dev_hold(spp_dev);
+        spp_dev_hold(spp_device);
         ifa->spp_dev = spp_device;
     }
     return spp_insert_ifa(ifa);
