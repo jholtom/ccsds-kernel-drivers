@@ -45,8 +45,8 @@ static BLOCKING_NOTIFIER_HEAD(sppaddr_chain);
 static void spp_rcu_free_ifa(struct rcu_head *head)
 {
     struct spp_ifaddr *ifa = container_of(head, struct spp_ifaddr, rcu_head);
-    if(ifa->ifa_dev)
-       spp_dev_put(ifa->ifa_dev);
+    if(ifa->spp_dev)
+       spp_dev_put(ifa->spp_dev);
     kfree(ifa);
 }
 
@@ -81,15 +81,14 @@ static void spp_dev_rcu_put(struct rcu_head *head){
 
 void spp_dev_device_down(struct net_device *dev)
 {
-    struct spp_ifaddr *ifa;
-    struct net_device *dev;
+    struct sppifaddr *ifa;
     struct spp_dev *spp_dev;
     spp_dev = dev->spp_ptr;
 
     ASSERT_RTNL();
     spp_dev->dead = 1;
     while((ifa = spp_dev->ifa_list) != NULL){
-        spp_del_ifa(spp_dev, *spp_dev->ifa_list,0);
+        spp_del_ifa(spp_dev, &spp_dev->ifa_list,0);
         spp_free_ifa(ifa);
     }
     dev->spp_ptr = NULL;
@@ -147,10 +146,10 @@ int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
         return -ENOBUFS;
     }
     /*TODO: Set device options here*/
-    if(ifa->ifa_dev != spp_device){
-        WARN_ON(ifa->ifa_dev);
+    if(ifa->spp_dev != spp_device){
+        WARN_ON(ifa->spp_dev);
         spp_dev_hold(spp_dev);
-        ifa->ifa_dev = spp_device;
+        ifa->spp_dev = spp_device;
     }
     return spp_insert_ifa(ifa);
 }
@@ -160,7 +159,7 @@ struct spp_ifaddr *spp_alloc_ifa(void)
     return kzalloc(sizeof(struct spp_ifaddr), GFP_KERNEL);
 }
 
-static void __spp_del_ifa(struct spp_dev *spp_dev, struct spp_ifaddr **ifap, int destroy, struct nlmsghdr, *nlh, u32 pid)
+static void __spp_del_ifa(struct spp_dev *spp_dev, struct spp_ifaddr **ifap, int destroy, struct nlmsghdr *nlh, u32 pid)
 {
     struct spp_ifaddr *ifa, *ifa1 = *ifap;
 

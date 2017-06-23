@@ -91,7 +91,7 @@ static inline struct spp_dev *__spp_dev_get_rcu(const struct net_device *dev)
     return spp_dev;
 }
 
-static __inline__ struct spp_dev * *spp_dev_get(const struct net_device *dev)
+static __inline__ struct spp_dev *spp_dev_get(const struct net_device *dev)
 {
     struct spp_dev *spp_dev;
     rcu_read_lock();
@@ -101,7 +101,7 @@ static __inline__ struct spp_dev * *spp_dev_get(const struct net_device *dev)
     rcu_read_unlock();
     return spp_dev;
 }
-static __inline__ struct spp_dev * __spp_dev_get_rtnl(const struct net_device *dev)
+static __inline__ struct spp_dev *__spp_dev_get_rtnl(const struct net_device *dev)
 {
     return (struct spp_dev*)dev->spp_ptr;
 }
