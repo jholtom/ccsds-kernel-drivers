@@ -253,8 +253,8 @@ static int spp_device_event(struct notifier_block *this, unsigned long event, vo
                 break;
                 TODO: Add other types of NETDEV events just in case */
             case NETDEV_DOWN:
-                spp_kill_by_device(dev);
                 spp_dev_device_down(dev);
+                spp_kill_by_device(dev);
                 break;
         }
     }

@@ -59,7 +59,7 @@ static BLOCKING_NOTIFIER_HEAD(sppaddr_chain);
 }*/
 void spp_dev_device_up(struct net_device *dev)
 {
-    spp_dev *spp_dev;
+    struct spp_dev *spp_dev;
 
     if((spp_dev = kzalloc(sizeof(*spp_dev),GFP_ATOMIC)) == NULL){
         printk(KERN_ERR "SPP: spp_dev_device_up - out of memory\n");
@@ -83,7 +83,7 @@ void spp_dev_device_up(struct net_device *dev)
 }
 void spp_dev_device_down(struct net_device *dev)
 {
-    spp_dev *s, *spp_dev;
+    struct spp_dev *s, *spp_dev;
 /*    if((spp_dev = spp_dev_sppdev(dev)) == NULL)
         return;*/
 
@@ -119,16 +119,16 @@ void spp_dev_device_down(struct net_device *dev)
     printk(KERN_INFO "SPP: Brought device down");
 }
 
-static void spp_free_ifa(struct spp_ifaddr *ifa)
+void spp_free_ifa(struct spp_ifaddr *ifa)
 {
-    kfree(&(ifa->ifa_dev));
+    kfree(&(ifa->spp_dev));
     kfree(ifa);
     /*TODO/FIXME: Fix this so I absolutely do not leak memory and properly use RCU instead of not using it...*/
 }
 
-static int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
+int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
 {
-    struct spp_dev *spp_Device = ifa->ifa_dev;
+    struct spp_dev *spp_device = ifa->spp_dev;
     struct spp_ifaddr *ifa1, **ifap, **last_primary;
 
     ASSERT_RTNL();
