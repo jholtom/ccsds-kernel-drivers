@@ -242,13 +242,13 @@ const struct hwtype *get_hwtype(const char *name)
     const struct hwtype * const *hwp;
 
     if (!sVhwinit)
-	hwinit();
+	     hwinit();
 
     hwp = hwtypes;
     while (*hwp != NULL) {
-	if (!strcmp((*hwp)->name, name))
-	    return (*hwp);
-	hwp++;
+    	if (!strcmp((*hwp)->name, name))
+    	    return (*hwp);
+    	hwp++;
     }
     return (NULL);
 }
@@ -260,13 +260,13 @@ const struct hwtype *get_hwntype(int type)
     const struct hwtype * const *hwp;
 
     if (!sVhwinit)
-	hwinit();
+	     hwinit();
 
     hwp = hwtypes;
     while (*hwp != NULL) {
-	if ((*hwp)->type == type)
-	    return (*hwp);
-	hwp++;
+    	if ((*hwp)->type == type)
+    	    return (*hwp);
+    	hwp++;
     }
     return (NULL);
 }

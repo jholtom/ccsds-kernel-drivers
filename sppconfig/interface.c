@@ -590,7 +590,7 @@ int if_fetch(struct interface *ife) {
 
     hw = get_hwntype(hf);
     if (hw == NULL)
-    hw = get_hwntype(-1);
+      hw = get_hwntype(-1);
 
     sprintf(flags, "flags=%d<", ife->flags);
     /* DONT FORGET TO ADD THE FLAGS IN ife_print_short, too */
@@ -636,6 +636,7 @@ int if_fetch(struct interface *ife) {
 
     printf(_("%s: %s  mtu %d"),
     ife->name, flags, ife->mtu);
+
     #ifdef SIOCSKEEPALIVE
     if (ife->outfill || ife->keepalive)
     printf(_("  outfill %d  keepalive %d"),
@@ -753,7 +754,7 @@ int if_fetch(struct interface *ife) {
 
     if (ife->tx_queue_len != -1)
     printf(_("  txqueuelen %d"), ife->tx_queue_len);
-    printf("  (%s)\n", hw->title);
+    printf("  (%s)\n", "Serial Line IP"); /* TODO: hw->title...make this work */
 
     #ifdef IFF_PORTSEL
     if (ife->flags & IFF_PORTSEL) {

@@ -36,8 +36,8 @@ struct interface {
   int tx_queue_len;		/* transmit queue length */
   struct ifmap map;		/* hardware setup        */
   union {
-struct sockaddr_storage addr_sas;
-struct sockaddr addr;	/* IP address            */
+    struct sockaddr_storage addr_sas;
+    struct sockaddr addr;	/* IP address            */
   };
   union {
     struct sockaddr_storage sppaddr_sas;
