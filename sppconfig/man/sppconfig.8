@@ -2,7 +2,7 @@
 .SH NAME
 sppconfig \- configure a SPP network interface
 .SH SYNOPSIS
-.B "sppconfig [-v] [-a] [-s] [interface]"
+.B "sppconfig [-v] [-a] [-s] interface"
 .br
 .B "sppconfig [-v] interface options | address ..."
 .SH DESCRIPTION
@@ -12,16 +12,8 @@ Protocol network interface. It is used at boot time to set up the interface as
 necessary.  After that, it is usually only needed when debugging or when system
 tuning is needed.
 .LP
-If no arguments are given,
-.B sppconfig
-displays the status of the currently active interfaces.  If
-a single
-.B interface
-argument is given, it displays the status of the given interface
-only; if a single
-.B \-a
-argument is given, it displays the status of all interfaces, even
-those that are down.  Otherwise, it configures an interface.
+If a single interface argument is given, it displays the status
+of the given interface. Otherwise, it configures an interface.
 
 .SH Address Families
 SPP is the only address family supported by this tool. It is used for
