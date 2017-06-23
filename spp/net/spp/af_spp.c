@@ -276,27 +276,31 @@ static int spp_release(struct socket *sock)
 static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 {
     struct sock *sk = sock->sk;
+    struct spp_sock *spp = spp_sk(sk);
     struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
     int len, i, rc = 0;
 
-    if(!sock_flag(sk, SOCK_ZAPPED) ||
-            addr_len != sizeof(struct sockaddr_spp) ||
-            addr->sspp_family != AF_SPP) {
-        rc = -EINVAL;
+    rc = -EINVAL;
+    if (addr_len < sizeof(struct sockaddr_spp))
         goto out;
-    }
-    if(!sppval(&(addr->sspp_addr))){
-        rc = -EINVAL;
+    rc = -EADDRNOTAVAIL; /* TODO: add check to make sure address is available */
+    rc = -EACCES;
+    if(!capable(CAP_NET_BIND_SERVICE)) /*TODO: This only checks to make sure you can bind ports...i.e either has capabilties or is root */
         goto out;
-    }
-    lock_sock(sk);
-    spp_sk(sk)->s_addr = addr->sspp_addr;
-    spp_insert_socket(sk);
-    sock_reset_flag(sk, SOCK_ZAPPED);
-    release_sock(sk);
-    printk(KERN_INFO "spp_bind: socket is bound\n");
-    /* TODO: Implement socket bind */
 
+    lock_sock(sk);
+    rc = -EINVAL;
+    if(sk->sk_state != TCP_CLOSE)
+        goto out_release_sock;
+
+    spp->s_addr = addr->sspp_addr;
+    if(spp->s_addr.spp_apid)
+        sk->sk_userlocks |= SOCK_BINDADDR_LOCK;
+    spp->d_addr = {0};
+    sk_dst_reset(sk);
+    rc = 0;
+out_release_sock:
+    release_sock(sk);
 out:
     return rc;
 }
@@ -572,7 +576,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                 memset(sin, 0, sizeof(*sin));
                 sin->sspp_family = AF_SPP;
                 sin->sspp_addr.spp_apid = ifa->ifa_local;
-                printk(KERN_INFO "SPP: IOCTL: Get Interface Address: %d\n", ifa->ifa_local);
+                printk(KERN_INFO "SPP: IOCTL: Get Interface Address\n");
                 goto rarok;
         }
         case SIOCSIFADDR: {
