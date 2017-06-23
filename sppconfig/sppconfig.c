@@ -117,7 +117,7 @@ static int if_print(char *ifname)
 	   printf(_("Iface      MTU    RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg\n"));
 
     if (!ifname) {
-	     res = for_all_interfaces(do_if_print, &opt_a);
+	     return -1;
     } else {
     	struct interface *ife;
 
@@ -274,11 +274,9 @@ fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
     	exit(1);
     }
 
-    /* Do we have to show the current setup? */
+    /* If no interface name provided, show usage */
     if (argc == 0) {
-    	int err = if_print((char *) NULL);
-    	(void) close(skfd);
-    	exit(err < 0);
+    	usage(); /* calls exit on completion */
     }
 
     /* No. Fetch the interface name. */
