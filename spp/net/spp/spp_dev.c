@@ -143,7 +143,7 @@ int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
         if(!(ifa1->ifa_flags & IFA_F_SECONDARY))
             last_primary = &ifa1->ifa_next;
         if(ifa1->ifa_local == ifa->ifa_local){
-            inet_free_ifa(ifa);
+            spp_free_ifa(ifa);
             return -EEXIST;
         }
         ifa->ifa_flags |= IFA_F_SECONDARY;
