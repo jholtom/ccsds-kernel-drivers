@@ -45,7 +45,9 @@ static BLOCKING_NOTIFIER_HEAD(sppaddr_chain);
 void spp_free_ifa(struct spp_ifaddr *ifa)
 {
     kfree(&(ifa->spp_dev));
+                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     kfree(ifa);
+                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     /*TODO/FIXME: Fix this so I absolutely do not leak memory and properly use RCU instead of not using it...*/
 }
 /*spp_dev *spp_addr_sppdev(spp_address *addr)
@@ -171,10 +173,13 @@ int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
 
     ASSERT_RTNL();
 
+                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     if(!spp_device){
         spp_free_ifa(ifa);
+                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
         return -ENOBUFS;
     }
+                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     return spp_insert_ifa(ifa);
 }
 
