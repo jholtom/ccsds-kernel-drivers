@@ -42,6 +42,12 @@
 
 static BLOCKING_NOTIFIER_HEAD(sppaddr_chain);
 
+void spp_free_ifa(struct spp_ifaddr *ifa)
+{
+    kfree(&(ifa->spp_dev));
+    kfree(ifa);
+    /*TODO/FIXME: Fix this so I absolutely do not leak memory and properly use RCU instead of not using it...*/
+}
 /*spp_dev *spp_addr_sppdev(spp_address *addr)
 {
     spp_dev *spp_dev, *result = NULL;
@@ -119,12 +125,6 @@ void spp_dev_device_down(struct net_device *dev)
     printk(KERN_INFO "SPP: Brought device down");
 }
 
-void spp_free_ifa(struct spp_ifaddr *ifa)
-{
-    kfree(&(ifa->spp_dev));
-    kfree(ifa);
-    /*TODO/FIXME: Fix this so I absolutely do not leak memory and properly use RCU instead of not using it...*/
-}
 
 int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
 {
@@ -142,7 +142,7 @@ int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
     for(ifap = &spp_device->ifa_list; (ifa1 = *ifap) != NULL; ifap = &ifa1->ifa_next){
         if(!(ifa1->ifa_flags & IFA_F_SECONDARY))
             last_primary = &ifa1->ifa_next;
-        if(ifa1->ifa_lcaol == ifa->ifa_local){
+        if(ifa1->ifa_local == ifa->ifa_local){
             inet_free_ifa(ifa);
             return -EEXIST;
         }
@@ -154,14 +154,15 @@ int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
     }
     ifa->ifa_next = *ifap;
     *ifap = ifa;
-    rtmsg_ifa(RTM_NEWADDR, ifa, nlh, pid);
+    /*TODO: either implement support for newaddr notifs, or ermove
+     * rtmsg_ifa(RTM_NEWADDR, ifa, nlh, pid);*/
     blocking_notifier_call_chain(&sppaddr_chain, NETDEV_UP, ifa);
     return 0;
 }
 
 int spp_insert_ifa(struct spp_ifaddr *ifa)
 {
-    return __spp_insert_ifa(ifa, NULL, 0)
+    return __spp_insert_ifa(ifa, NULL, 0);
 }
 
 int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
@@ -174,7 +175,7 @@ int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
         spp_free_ifa(ifa);
         return -ENOBUFS;
     }
-    return spp_insert_ifa(ifa)
+    return spp_insert_ifa(ifa);
 }
 
 struct spp_ifaddr *spp_alloc_ifa(void)
@@ -182,9 +183,9 @@ struct spp_ifaddr *spp_alloc_ifa(void)
     return kzalloc(sizeof(struct spp_ifaddr), GFP_KERNEL);
 }
 
-int spp_del_ifa(struct spp_device *spp_dev, struct spp_ifaddr **ifap, int destroy)
+int spp_del_ifa(struct spp_dev *spp_device, struct spp_ifaddr **ifap, int destroy)
 {
-
+    return 0;
 }
 
 int register_sppaddr_notifier(struct notifier_block *nb)
@@ -200,9 +201,9 @@ EXPORT_SYMBOL(unregister_sppaddr_notifier);
 
 void __exit spp_dev_free(void)
 {
-    spp_dev *s, *spp_dev;
+    struct spp_dev *s, *spp_dev;
 
-    spin_lock_bh(&spp_dev_lock);
+    /*spin_lock_bh(&spp_dev_lock);
     spp_dev = spp_dev_list;
     while(spp_dev != NULL){
         s = spp_dev;
@@ -211,5 +212,5 @@ void __exit spp_dev_free(void)
         kfree(s);
     }
     spp_dev_list = NULL;
-    spin_unlock_bh(&spp_dev_lock);
+    spin_unlock_bh(&spp_dev_lock);*/
 }
