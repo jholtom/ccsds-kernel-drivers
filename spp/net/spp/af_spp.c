@@ -296,7 +296,8 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
     spp->s_addr = addr->sspp_addr;
     if(spp->s_addr.spp_apid)
         sk->sk_userlocks |= SOCK_BINDADDR_LOCK;
-    spp->d_addr = {0};
+    struct sockaddr_spp nulladdr = {0};
+    spp->d_addr = nulladdr;
     sk_dst_reset(sk);
     rc = 0;
 out_release_sock:
