@@ -294,6 +294,8 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
         goto out_release_sock;
 
     spp->s_addr = addr->sspp_addr;
+    spp_insert_socket(sk);
+    sock_reset_flag(sk, SOCK_ZAPPED);
     if(spp->s_addr.spp_apid)
         sk->sk_userlocks |= SOCK_BINDADDR_LOCK;
     spp_address nulladdr = {0};
