@@ -61,6 +61,7 @@ static inline struct spp_sock *spp_sk(const struct sock *sk)
 struct spp_ifaddr {
     struct spp_ifaddr *ifa_next;
     struct spp_dev *spp_dev;
+    struct rcu_head rcu_head;
     unsigned int ifa_local;
     unsigned int ifa_address;
     unsigned char ifa_flags;
@@ -71,6 +72,9 @@ struct spp_dev {
     struct spp_dev *next;
     struct net_device *dev;
     struct spp_ifaddr *ifa_list;
+    atomic_t refcnt;
+    int dead;
+    struct rcu_head rcu_head;
 };
 
 extern struct hlist_head spp_list;
@@ -79,7 +83,25 @@ extern spinlock_t spp_list_lock;
 /* af_spp.c */
 extern int sysctl_spp_idle_timer;
 
-static __inline struct spp_dev * __spp_dev_get_rtnl(const struct net_device *dev)
+static inline struct spp_dev *__spp_dev_get_rcu(const struct net_device *dev)
+{
+    struct spp_dev *spp_dev = dev->spp_ptr;
+    if(spp_dev)
+        spp_dev = rcu_dereference(spp_dev);
+    return spp_dev;
+}
+
+static __inline__ struct spp_dev * *spp_dev_get(const struct net_device *dev)
+{
+    struct spp_dev *spp_dev;
+    rcu_read_lock();
+    spp_dev = __spp_dev_get_rcu(dev);
+    if(spp_dev)
+        atomic_inc(&spp_dev->refcnt);
+    rcu_read_unlock();
+    return spp_dev;
+}
+static __inline__ struct spp_dev * __spp_dev_get_rtnl(const struct net_device *dev)
 {
     return (struct spp_dev*)dev->spp_ptr;
 }
@@ -93,7 +115,17 @@ extern int sppval(const spp_address *addr);
 /* spp_dev.c */
 extern void spp_dev_device_up(struct net_device *);
 extern void spp_dev_device_down(struct net_device *);
-extern void spp_dev_free(void);
+
+extern void spp_dev_finish_destroy(struct spp_dev *sdev);
+
+static inline void spp_dev_put(struct spp_dev *sdev)
+{
+    if(atomic_dec_and_test(&sdev->refcnt))
+        spp_dev_finish_destroy(sdev);
+}
+
+#define __spp_dev_put(sdev)  atomic_dec(&(sdev)->refcnt)
+#define spp_dev_hold(sdev)  atomic_inc(&(sdev)->refcnt)
 
 extern void spp_free_ifa(struct spp_ifaddr *ifa);
 extern int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa);

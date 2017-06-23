@@ -587,24 +587,19 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                 if(!ifa){
                     rc = -ENOBUFS;
                     ifa = spp_alloc_ifa();
-                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
                     if(!ifa)
                         break;
                     memcpy(ifa->ifa_label, dev->name, IFNAMSIZ);
-                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
                 }
                 else {
                     rc = 0;
                     if(ifa->ifa_local == sin->sspp_addr.spp_apid)
                         break;
                     spp_del_ifa(spp_device, ifap, 0);
-                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
                 }
-                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
                 ifa->ifa_address = ifa->ifa_local = sin->sspp_addr.spp_apid;
-                printk(KERN_INFO "SPP: IOCTL: Set Interface Address\n");
                 rc = spp_set_ifa(dev, ifa);
-                printk(KERN_DEBUG "SPP: IOCTL: Finished set_ifa");
+                printk(KERN_INFO "SPP: IOCTL: Set Interface Address\n");
                 break;
         }
         case SIOCSIFFLAGS: {

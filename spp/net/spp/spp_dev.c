@@ -42,89 +42,58 @@
 
 static BLOCKING_NOTIFIER_HEAD(sppaddr_chain);
 
+static void spp_rcu_free_ifa(struct rcu_head *head)
+{
+    struct spp_ifaddr *ifa = container_of(head, struct spp_ifaddr, rcu_head);
+    if(ifa->ifa_dev)
+       spp_dev_put(ifa->ifa_dev);
+    kfree(ifa);
+}
+
 void spp_free_ifa(struct spp_ifaddr *ifa)
 {
-    kfree(&(ifa->spp_dev));
-                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
-    kfree(ifa);
-                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
-    /*TODO/FIXME: Fix this so I absolutely do not leak memory and properly use RCU instead of not using it...*/
+    call_rcu(&ifa->rcu_head, spp_rcu_free_ifa);
 }
-/*spp_dev *spp_addr_sppdev(spp_address *addr)
-{
-    spp_dev *spp_dev, *result = NULL;
 
-    spin_lock_bh(&spp_dev_lock);
-    for(spp_dev = spp_dev_list; spp_dev != NULL; spp_dev = spp_dev->next)
-    {
-        if(sppcmp(addr, (spp_address *)spp_dev->dev->dev_addr) == 0) {
-            result= spp_dev;
-        }
-    }
-    spin_unlock_bh(&spp_dev_lock);
-    return result;
-
-}*/
 void spp_dev_device_up(struct net_device *dev)
 {
     struct spp_dev *spp_dev;
 
-    if((spp_dev = kzalloc(sizeof(*spp_dev),GFP_ATOMIC)) == NULL){
-        printk(KERN_ERR "SPP: spp_dev_device_up - out of memory\n");
-        return;
-    }
-    spp_unregister_sysctl();
+    ASSERT_RTNL();
 
-    dev->spp_ptr = spp_dev;
+    spp_dev = kzalloc(sizeof(*spp_dev), GFP_KERNEL);
+    if(!spp_dev)
+        goto out;
+    /* TODO: Set device specific config flags here*/
     spp_dev->dev = dev;
     dev_hold(dev);
-    /*    spp_dev->values[
-     *  TODO: set up idle value handling here later
-     */
-    /*spin_lock_bh(&spp_dev_lock);
-    spp_dev->next = spp_dev_list;
-    spp_dev_list = spp_dev;
-    spin_unlock_bh(&spp_dev_lock);*/
+    spp_dev_hold(spp_dev);
 
-    spp_register_sysctl();
-    printk(KERN_INFO "SPP: Brought device up\n");
+    rcu_assign_pointer(dev->spp_ptr, spp_dev);
+out:
+    return spp_dev;
 }
+
+static void spp_dev_rcu_put(struct rcu_head *head){
+    struct spp_dev *sdev = container_of(head, struct spp_dev, rcu_head);
+    spp_dev_put(sdev);
+}
+
 void spp_dev_device_down(struct net_device *dev)
 {
-    struct spp_dev *s, *spp_dev;
-/*    if((spp_dev = spp_dev_sppdev(dev)) == NULL)
-        return;*/
+    struct spp_ifaddr *ifa;
+    struct net_device *dev;
+    struct spp_dev *spp_dev;
+    spp_dev = dev->spp_ptr;
 
-    spp_unregister_sysctl();
-/*
-    spin_lock_bh(&spp_dev_lock);
-
-    if ((s = spp_dev_list) == spp_dev) {
-        spp_dev_list = s->next;
-        spin_unlock_bh(&spp_dev_lock);
-        dev_put(dev);
-        kfree(spp_dev);
-        spp_register_sysctl();
-        return;
+    ASSERT_RTNL();
+    spp_dev->dead = 1;
+    while((ifa = spp_dev->ifa_list) != NULL){
+        spp_del_ifa(spp_dev, *spp_dev->ifa_list,0);
+        spp_free_ifa(ifa);
     }
-
-    while (s != NULL && s->next != NULL) {
-        if (s->next == spp_dev) {
-            s->next = spp_dev->next;
-            spin_unlock_bh(&spp_dev_lock);
-            dev_put(dev);
-            kfree(spp_dev);
-            spp_register_sysctl();
-            return;
-        }
-
-        s = s->next;
-    }
-
-    spin_unlock_bh(&spp_dev_lock);*/
     dev->spp_ptr = NULL;
-    spp_register_sysctl();
-    printk(KERN_INFO "SPP: Brought device down");
+    call_rcu(&spp_dev->rcu_head, spp_dev_rcu_put);
 }
 
 
@@ -173,13 +142,16 @@ int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
 
     ASSERT_RTNL();
 
-                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
     if(!spp_device){
         spp_free_ifa(ifa);
-                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
         return -ENOBUFS;
     }
-                printk(KERN_ALERT "SPP: DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
+    /*TODO: Set device options here*/
+    if(ifa->ifa_dev != spp_device){
+        WARN_ON(ifa->ifa_dev);
+        spp_dev_hold(spp_dev);
+        ifa->ifa_dev = spp_device;
+    }
     return spp_insert_ifa(ifa);
 }
 
@@ -188,10 +160,44 @@ struct spp_ifaddr *spp_alloc_ifa(void)
     return kzalloc(sizeof(struct spp_ifaddr), GFP_KERNEL);
 }
 
+static void __spp_del_ifa(struct spp_dev *spp_dev, struct spp_ifaddr **ifap, int destroy, struct nlmsghdr, *nlh, u32 pid)
+{
+    struct spp_ifaddr *ifa, *ifa1 = *ifap;
+
+    ASSERT_RTNL();
+    struct spp_ifaddr **ifap1 = &ifa1->ifa_next;
+    while((ifa = *ifap1) != NULL){
+        *ifap1 = ifa->ifa_next;
+        blocking_notifier_call_chain(&sppaddr_chain,NETDEV_DOWN,ifa);
+        spp_free_ifa(ifa);
+    }
+
+    *ifap =ifa1->ifa_next;
+
+    blocking_notifier_call_chain(&sppaddr_chain, NETDEV_DOWN, ifa1);
+
+    if(destroy)
+        spp_free_ifa(ifa1);
+}
+
 int spp_del_ifa(struct spp_dev *spp_device, struct spp_ifaddr **ifap, int destroy)
 {
-    return 0;
+    __spp_del_ifa(spp_device, ifap, destroy, NULL, 0);
 }
+
+void spp_dev_finish_destroy(struct spp_dev *sdev)
+{
+    struct net_device *dev = sdev->dev;
+
+    WARN_ON(sdev->ifa_list);
+    printk(KERN_DEBUG "spp_dev_finish_destroy: %p=%s\n", sdev, dev ? dev->name : "NIL");
+    dev_put(dev);
+    if(!sdev->dead)
+        pr_err("Freeing alive spp_dev %p\n", sdev);
+    else
+        kfree(sdev);
+}
+EXPORT_SYMBOL(spp_dev_finish_destroy);
 
 int register_sppaddr_notifier(struct notifier_block *nb)
 {
@@ -203,19 +209,3 @@ int unregister_sppaddr_notifier(struct notifier_block *nb)
     return blocking_notifier_chain_unregister(&sppaddr_chain, nb);
 }
 EXPORT_SYMBOL(unregister_sppaddr_notifier);
-
-void __exit spp_dev_free(void)
-{
-    struct spp_dev *s, *spp_dev;
-
-    /*spin_lock_bh(&spp_dev_lock);
-    spp_dev = spp_dev_list;
-    while(spp_dev != NULL){
-        s = spp_dev;
-        dev_put(spp_dev->dev);
-        spp_dev = spp_dev->next;
-        kfree(s);
-    }
-    spp_dev_list = NULL;
-    spin_unlock_bh(&spp_dev_lock);*/
-}
