@@ -24,6 +24,7 @@ $Id: interface.c,v 1.35 2011-01-01 03:22:31 ecki Exp $
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
+#include <netspp/spp.h>
 
 #if HAVE_AFIPX
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
@@ -634,17 +635,12 @@ int if_fetch(struct interface *ife) {
       flags[strlen(flags)-1] = 0;
 
 
-    printf(_("%s: %s  mtu %d"),
+    printf(_("%s: %s  mtu %d\n"),
     ife->name, flags, ife->mtu);
 
-    #ifdef SIOCSKEEPALIVE
-    if (ife->outfill || ife->keepalive)
-    printf(_("  outfill %d  keepalive %d"),
-    ife->outfill, ife->keepalive);
-    #endif
-    printf("\n");
-
-
+    /* print addresses */
+    struct sockaddr_spp saddr = *((struct sockaddr_spp *) &(ife->sppaddr));
+    printf("  spp addr: %d \n", (saddr.sspp_addr).spp_apid);
 
     #if HAVE_AFINET
     if (ife->has_ip) {
