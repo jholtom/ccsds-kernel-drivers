@@ -293,13 +293,12 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
     if(sk->sk_state != TCP_CLOSE)
         goto out_release_sock;
 
-    spp->s_addr = addr->sspp_addr;
+    spp->s_addr.spp_apid = addr->sspp_addr.spp_apid;
     spp_insert_socket(sk);
     sock_reset_flag(sk, SOCK_ZAPPED);
     if(spp->s_addr.spp_apid)
         sk->sk_userlocks |= SOCK_BINDADDR_LOCK;
-    spp_address nulladdr = {0};
-    spp->d_addr = nulladdr;
+    spp->d_addr.spp_apid = 0;
     sk_dst_reset(sk);
     rc = 0;
 out_release_sock:
@@ -418,8 +417,6 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     lock_kernel();
 
     if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_OOB|MSG_EOR|MSG_CMSG_COMPAT))
-        goto out;
-    if(!(msg->msg_flags & (MSG_EOF)))
         goto out;
 
     printk(KERN_INFO "SPP: Checked message flags and passed!\n");
