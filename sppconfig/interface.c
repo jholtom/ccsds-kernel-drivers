@@ -640,117 +640,12 @@ int if_fetch(struct interface *ife) {
 
     /* print addresses */
     struct sockaddr_spp saddr = *((struct sockaddr_spp *) &(ife->sppaddr));
-    printf("  spp addr: %d \n", (saddr.sspp_addr).spp_apid);
-
-    #if HAVE_AFINET
-    if (ife->has_ip) {
-      printf(_("        %s %s"), ap->name,
-      ap->sprint(&ife->addr_sas, 1));
-      printf(_("  netmask %s"), ap->sprint(&ife->netmask_sas, 1));
-      if (ife->flags & IFF_BROADCAST) {
-        printf(_("  broadcast %s"), ap->sprint(&ife->broadaddr_sas, 1));
-      }
-      if (ife->flags & IFF_POINTOPOINT) {
-        printf(_("  destination %s"), ap->sprint(&ife->dstaddr_sas, 1));
-      }
-      printf("\n");
-    }
-    #endif
-
-    #if HAVE_AFINET6
-    /* FIXME: should be integrated into interface.c.   */
-
-    if ((f = fopen(_PATH_PROCNET_IFINET6, "r")) != NULL) {
-      while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %08x %02x %02x %02x %20s\n",
-      addr6p[0], addr6p[1], addr6p[2], addr6p[3],
-      addr6p[4], addr6p[5], addr6p[6], addr6p[7],
-      &if_idx, &plen, &scope, &dad_status, devname) != EOF) {
-        if (!strcmp(devname, ife->name)) {
-          sprintf(addr6, "%s:%s:%s:%s:%s:%s:%s:%s",
-          addr6p[0], addr6p[1], addr6p[2], addr6p[3],
-          addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
-          inet6_aftype.input(1, addr6, &sas);
-          printf(_("        %s %s  prefixlen %d"),
-          inet6_aftype.name,
-          inet6_aftype.sprint(&sas, 1),
-          plen);
-          printf(_("  scopeid 0x%x"), scope);
-
-          flags[0] = '<'; flags[1] = 0;
-          if (scope & IPV6_ADDR_COMPATv4) {
-            strcat(flags, _("compat,"));
-            scope -= IPV6_ADDR_COMPATv4;
-          }
-          if (scope == 0)
-          strcat(flags, _("global,"));
-          if (scope & IPV6_ADDR_LINKLOCAL)
-          strcat(flags, _("link,"));
-          if (scope & IPV6_ADDR_SITELOCAL)
-          strcat(flags, _("site,"));
-          if (scope & IPV6_ADDR_LOOPBACK)
-          strcat(flags, _("host,"));
-          if (flags[strlen(flags)-1] == ',')
-          flags[strlen(flags)-1] = '>';
-          else
-          flags[strlen(flags)-1] = 0;
-          printf("%s\n", flags);
-        }
-      }
-      fclose(f);
-    }
-    #endif
-
-    #if HAVE_AFIPX
-    if (ipxtype == NULL)
-    ipxtype = get_afntype(AF_IPX);
-
-    if (ipxtype != NULL) {
-      if (ife->has_ipx_bb)
-      printf(_("        %s Ethernet-II   %s\n"),
-      ipxtype->name, ipxtype->sprint(&ife->ipxaddr_bb_sas, 1));
-      if (ife->has_ipx_sn)
-      printf(_("        %s Ethernet-SNAP %s\n"),
-      ipxtype->name, ipxtype->sprint(&ife->ipxaddr_sn_sas, 1));
-      if (ife->has_ipx_e2)
-      printf(_("        %s Ethernet802.2 %s\n"),
-      ipxtype->name, ipxtype->sprint(&ife->ipxaddr_e2_sas, 1));
-      if (ife->has_ipx_e3)
-      printf(_("        %s Ethernet802.3 %s\n"),
-      ipxtype->name, ipxtype->sprint(&ife->ipxaddr_e3_sas, 1));
-    }
-    #endif
-
-    #if HAVE_AFATALK
-    if (ddptype == NULL)
-    ddptype = get_afntype(AF_APPLETALK);
-    if (ddptype != NULL) {
-      if (ife->has_ddp)
-      printf(_("        %s %s\n"), ddptype->name, ddptype->sprint(&ife->ddpaddr_sas, 1));
-    }
-    #endif
-
-    #if HAVE_AFECONET
-    if (ectype == NULL)
-    ectype = get_afntype(AF_ECONET);
-    if (ectype != NULL) {
-      if (ife->has_econet)
-      printf(_("        %s %s\n"), ectype->name, ectype->sprint(&ife->ecaddr_sas, 1));
-    }
-    #endif
-
-    /* For some hardware types (eg Ash, ATM) we don't print the
-    hardware address if it's null.  */
-#if 0
-    if (hw->print != NULL && (! (hw_null_address(hw, ife->hwaddr) &&
-    hw->suppress_null_addr)))
-    printf(_("        %s %s"), hw->name, hw->print(ife->hwaddr));
-    else
-    printf(_("        %s"), hw->name);
-#endif
+    printf("        spp addr: %d \n", (saddr.sspp_addr).spp_apid);
 
     if (ife->tx_queue_len != -1)
-    printf(_("  txqueuelen %d"), ife->tx_queue_len);
-    printf("  (%s)\n", "Serial Line IP"); /* TODO: hw->title...make this work */
+    printf(_("        txqueuelen %d"), ife->tx_queue_len);
+
+    printf("        (%s)\n", "Serial Line IP"); /* TODO: hw->title...make this work */
 
     #ifdef IFF_PORTSEL
     if (ife->flags & IFF_PORTSEL) {

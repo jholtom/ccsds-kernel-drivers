@@ -35,9 +35,9 @@ int main() {
         perror("sendto failed");
         return -3;
     }
-    int rc;
-    unsigned char recvdata[BUFSIZE];
-    rc = recvfrom(fd, recvdata, BUFSIZE, (struct sockaddr *)&servaddr, sizeof(servaddr));
+  //  int rc;
+  //  unsigned char recvdata[BUFSIZE];
+  //  rc = recvfrom(fd, recvdata, BUFSIZE, (struct sockaddr *)&servaddr, sizeof(servaddr));
     /* could also use recv() but you need to connect() first */
         return 0; /* Somehow this thing works */
 }
