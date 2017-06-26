@@ -480,7 +480,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
     printk(KERN_INFO "SPP: Transmitting buffer\n");
 
-
+    rc = 0;
 
 out:
     return rc;
