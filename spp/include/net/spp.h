@@ -79,7 +79,7 @@ static inline __be16 spp_type_trans(struct sk_buff *skb, struct net_device *dev)
 {
     skb->dev = dev;
     skb_reset_mac_header(skb);
-    skb->packet_type = PACKET_HOST;
+    skb->pkt_type = PACKET_HOST;
     return htons(ETH_P_SPP);
 }
 
@@ -146,7 +146,7 @@ extern int spp_process_rx(struct sock *, struct sk_buff *);
 extern int spp_backlog_rcv(struct sock *, struct sk_buff *);
 
 /* spp_out.c */
-extern void spp_queue_xmit(struct sk_buff *skb, struct net_device *dev)
+extern void spp_queue_xmit(struct sk_buff *skb, struct net_device *dev);
 
 /* spp_proc.c */
 extern int spp_proc_init(void);
