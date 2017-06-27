@@ -489,7 +489,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     /* Handle packets in a sequence here */
     /* determine this if the data length is greater than 1k */
 
-    skb_push(skb, 2 + sizeof(struct spphdr));
+    skb_push(skb, sizeof(struct spphdr));
     hdr = spp_hdr(skb);
     hdr->pvn = 0;
     hdr->pt = 0; /*TODO: configure this to actually be able to swithc between TM and TC */
