@@ -277,7 +277,7 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 {
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
-    spp_dev *spp_dev = NULL;
+    struct spp_dev *spp_dev = NULL;
     struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
     int len, i, rc = 0;
 
