@@ -53,7 +53,7 @@ struct spp_dev *spp_addr_sppdev(spp_address *addr)
     for(spp_dev = spp_dev_list; spp_dev != NULL; spp_dev = spp_dev->next)
     {
         for(s = spp_dev->ifa_list; s != NULL; s = s->ifa_next){
-            if((addr->spp_apid = s->ifa_address) == 0){
+            if(addr->spp_apid == s->ifa_address){
                 res = spp_dev;
             }
         }
