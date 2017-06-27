@@ -32,9 +32,9 @@ struct spphdr {
         __be16 pdl;
 };
 
-static inline struct iphdr *ip_hdr(const struct sk_buff *skb)
+static inline struct spphdr *spp_hdr(const struct sk_buff *skb)
 {
-    return (struct iphdr *)skb_network_header(skb);
+    return (struct spphdr *)skb_network_header(skb);
 }
 
 typedef struct {

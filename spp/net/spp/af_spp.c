@@ -80,11 +80,11 @@ static void spp_kill_by_device(struct net_device *dev)
     struct hlist_node *node;
     write_lock_bh(&spp_list_lock);
     sk_for_each(s, node, &spp_list){
-        struct spp_sock *spp = spp_sk(s);
-        if(spp->device == dev){
-            spp_disconnect(s, ENETUNREACH,SPP_OUT_OF_ORDER,0);
-            spp->device = NULL;
-        }
+	struct spp_sock *spp = spp_sk(s);
+	if(spp->device == dev){
+	    spp_disconnect(s, ENETUNREACH,SPP_OUT_OF_ORDER,0);
+	    spp->device = NULL;
+	}
     }
     write_unlock_bh(&spp_list_lock);
 }
@@ -121,15 +121,15 @@ static int spp_setsockopt(struct socket *sock, int level, int optname, char __us
 
     lock_kernel();
     if (level != SOL_SPP || optname != SPP_PKTTYPE)
-        goto out;
+	goto out;
 
     rc = -EINVAL;
     if (optlen < sizeof(int))
-        goto out;
+	goto out;
 
     rc = -EFAULT;
     if(get_user(opt, (int __user *)optval))
-        goto out;
+	goto out;
 
     spp_sk(sk)->type = !!opt;
     rc = 0;
@@ -150,21 +150,21 @@ static int spp_getsockopt(struct socket *sock, int level, int optname, char __us
 
     lock_kernel();
     if (level != SOL_SPP || optname != SPP_PKTTYPE)
-        goto out;
+	goto out;
 
     rc = -EFAULT;
     if(get_user(len,optlen))
-        goto out;
+	goto out;
 
     len = min_t(unsigned int, len, sizeof(int));
 
     rc = -EINVAL;
     if (len < 0)
-        goto out;
+	goto out;
 
     rc = -EFAULT;
     if(put_user(len,optlen))
-        goto out;
+	goto out;
 
     val = spp_sk(sk)->type;
     rc = copy_to_user(optval,&val,len) ? -EFAULT : 0;
@@ -181,12 +181,12 @@ static int spp_listen(struct socket *sock, int backlog)
     struct sock *sk = sock->sk; /* Gets the socket representation */
     /* TODO: verify functionality and correctness */
     if(sk->sk_state != TCP_LISTEN){ /* If it is not already in a listening state */
-        struct spp_sock *spp = spp_sk(sk); /* Get the SPP specific representation */
+	struct spp_sock *spp = spp_sk(sk); /* Get the SPP specific representation */
 
-        memset(&spp->d_addr, 0, SPP_APID_LEN); /* TODO: should we really be setting it to 0? why memset, shouldn't we just reference the null_addr? */
-        sk->sk_max_ack_backlog = backlog; /* Adjust backlog for acknowledgements (SPP technically doesn't have this)*/
-        sk->sk_state = TCP_LISTEN; /* Set state into listen */
-        return 0; /* We did it! */
+	memset(&spp->d_addr, 0, SPP_APID_LEN); /* TODO: should we really be setting it to 0? why memset, shouldn't we just reference the null_addr? */
+	sk->sk_max_ack_backlog = backlog; /* Adjust backlog for acknowledgements (SPP technically doesn't have this)*/
+	sk->sk_state = TCP_LISTEN; /* Set state into listen */
+	return 0; /* We did it! */
     }
     return -EOPNOTSUPP; /* If we can't go into listen mode, it isn't supported */
 }
@@ -209,14 +209,14 @@ static int spp_create(struct net *net, struct socket *sock, int protocol, int ke
     int rc;
 
     if(!net_eq(net, &init_net))
-        return -EAFNOSUPPORT;
+	return -EAFNOSUPPORT;
 
     if(sock->type != SOCK_DGRAM || protocol != 0)
-        return -ESOCKTNOSUPPORT;
+	return -ESOCKTNOSUPPORT;
 
     sk = sk_alloc(net, AF_SPP, GFP_ATOMIC, &spp_proto);
     if (sk == NULL)
-        return -ENOMEM;
+	return -ENOMEM;
 
     spp = spp_sk(sk);
     sock_init_data(sock, sk);
@@ -238,25 +238,25 @@ static int spp_device_event(struct notifier_block *this, unsigned long event, vo
 {
     struct net_device *dev = ptr;
     if(!net_eq(dev_net(dev), &init_net))
-        return NOTIFY_DONE;
+	return NOTIFY_DONE;
 
     /* TODO: enable it to also switch if the type is SDLP, or another layer
      * This is fairly mission specific...*/
     if (dev->type == ARPHRD_SLIP){
-        switch(event) {
-            case NETDEV_UP:
-                spp_dev_device_up(dev);
-                break;
-                /*case NETDEV_GOING_DOWN:
-                TODO: probably just kill off the idle timer here
-                spp_terminate_link();
-                break;
-                TODO: Add other types of NETDEV events just in case */
-            case NETDEV_DOWN:
-                spp_dev_device_down(dev);
-                spp_kill_by_device(dev);
-                break;
-        }
+	switch(event) {
+	    case NETDEV_UP:
+		spp_dev_device_up(dev);
+		break;
+		/*case NETDEV_GOING_DOWN:
+TODO: probably just kill off the idle timer here
+spp_terminate_link();
+break;
+TODO: Add other types of NETDEV events just in case */
+	    case NETDEV_DOWN:
+		spp_dev_device_down(dev);
+		spp_kill_by_device(dev);
+		break;
+	}
     }
     return NOTIFY_DONE;
 }
@@ -282,22 +282,22 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 
     rc = -EINVAL;
     if (addr_len < sizeof(struct sockaddr_spp))
-        goto out;
+	goto out;
     rc = -EADDRNOTAVAIL; /* TODO: add check to make sure address is available */
     rc = -EACCES;
     if(!capable(CAP_NET_BIND_SERVICE)) /*TODO: This only checks to make sure you can bind ports...i.e either has capabilties or is root */
-        goto out;
+	goto out;
 
     lock_sock(sk);
     rc = -EINVAL;
     if(sk->sk_state != TCP_CLOSE)
-        goto out_release_sock;
+	goto out_release_sock;
 
     spp->s_addr.spp_apid = addr->sspp_addr.spp_apid;
     spp_insert_socket(sk);
     sock_reset_flag(sk, SOCK_ZAPPED);
     if(spp->s_addr.spp_apid)
-        sk->sk_userlocks |= SOCK_BINDADDR_LOCK;
+	sk->sk_userlocks |= SOCK_BINDADDR_LOCK;
     spp->d_addr.spp_apid = 0;
     sk_dst_reset(sk);
     rc = 0;
@@ -319,33 +319,33 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
 
     lock_sock(sk);
     if (sk->sk_state == TCP_ESTABLISHED && sock->state == SS_CONNECTING){
-        sock->state = SS_CONNECTED;
-        goto out;
+	sock->state = SS_CONNECTED;
+	goto out;
     }
     rc = -ECONNREFUSED;
     if (sk->sk_state == TCP_CLOSE && sock->state == SS_CONNECTING){
-        sock->state == SS_UNCONNECTED;
-        goto out;
+	sock->state == SS_UNCONNECTED;
+	goto out;
     }
     rc = -EISCONN;
     if (sk->sk_state == TCP_ESTABLISHED)
-        goto out;
+	goto out;
 
     sk->sk_state = TCP_CLOSE;
     sock->state = SS_UNCONNECTED;
 
     rc = -EINVAL;
     if (addr_len != sizeof(struct sockaddr_spp) || addr->sspp_family != AF_SPP)
-        goto out;
+	goto out;
 
     rc = -EINVAL;
     if (sock_flag(sk, SOCK_ZAPPED))
-        goto out;
+	goto out;
 
     spp_address spp_null = spp_nulladdr;
     if(!sppcmp(&(spp->s_addr), &spp_null))
-        /*TODO: set spp->s_addr to null address */
-        spp->d_addr = addr->sspp_addr;
+	/*TODO: set spp->s_addr to null address */
+	spp->d_addr = addr->sspp_addr;
 
     sock->state = SS_CONNECTING;
     sk->sk_state = SS_CONNECTED;/* TODO: in connecting for no time at all, immediately shift to connected? */;
@@ -382,13 +382,13 @@ static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_l
 
     lock_kernel();
     if (peer) {
-        if(sk->sk_state != TCP_ESTABLISHED){
-            rc = -ENOTCONN;
-            goto out; /* Theoretically this should never happen, but we have the potential to go into IDLE_TIMEOUT and then we go into a dead state...*/
-        }
-        sspp->sspp_addr = spp->d_addr;
+	if(sk->sk_state != TCP_ESTABLISHED){
+	    rc = -ENOTCONN;
+	    goto out; /* Theoretically this should never happen, but we have the potential to go into IDLE_TIMEOUT and then we go into a dead state...*/
+	}
+	sspp->sspp_addr = spp->d_addr;
     } else
-        sspp->sspp_addr = spp->s_addr;
+	sspp->sspp_addr = spp->s_addr;
 
     sspp->sspp_family = AF_SPP;
     *uaddr_len = sizeof(*sspp);
@@ -405,42 +405,103 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 {
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
-    int slen = len;
     int free, connected = 0;
+    struct sockaddr_spp *usspp = (struct sockaddr_spp *)msg->msg_name;
     spp_address daddr,saddr;
-    int rc;
-    int (*getfrag)(void *, char *, int, int, int, struct sk_buff *);
+    struct spphdr *hdr;
+    int rc,slen;
 
     /* Check that length is not too big */
     if(len > 0xFFFF)
-        return -EMSGSIZE;
+	return -EMSGSIZE;
 
     /* Check if someone wants OOB data, cause we don't do it */
     if(msg->msg_flags & MSB_OOB)
-        return -EOPNOTSUPP;
+	return -EOPNOTSUPP;
 
-    /* No corking here...so don't worry about it */
+    lock_sock(sk);
 
-    /* slen contains the full length of the packet, so add on the header length */
-    slen += sizeof(struct spphdr);
-
-    if(msg->msg_name){
-        /* Check that we have a valid address on our hands and fill out the bits and bobs we need to actually xmit */
-    } else {
-        /* if we aren't established, bail out now, DESTADDRREQ */
-        /* If we are, assign our data fields the things we want to know about our destination */
+    if(sock_flag(sk, SOCK_ZAPPED)){
+	rc = -EADDRNOTAVAIL;
+	goto out;
     }
-    /* sk->sk_bound_dev_if should be our output interface index*/
-    printk(KERN_INFO "SPP: sendmsg: Bound to Interface Index: %d", sk->sk_bound_dev_if);
 
-    /* Get a transmit timestamp */
+    if(sk->sk_shutdown & SEND_SHUTDOWN) {
+	send_sig(SIGPIPE, current, 0);
+	rc = -EPIPE;
+	goto out;
+    }
 
-    /* Set addresses */
+    if(spp->spp_dev == NULL){
+	rc = -ENETUNREACH;
+	goto out;
+    }
 
+    if(usspp != NULL){
+	if(usspp->sspp_family != AF_SPP || addr_len != sizeof(struct sockaddr_spp)){
+	    rc = -EINVAL;
+	    goto out;
+	}
+	daddr = *usspp;
+    } else {
+	if(sk->sk_state != TCP_ESTABLISHED){
+	    rc = -ENOTCONN;
+	    got out;
+	}
+	daddr.sspp_family = AF_SPP;
+	daddr.sspp_addr = spp->d_addr;
+    }
+    printk(KERN_INFO "SPP: sendmsg: Addresses ready, building packet.\n");
 
+    slen = len + sizeof(struct spphdr);
 
+    skb = sock_alloc_send_skb(sk, slen, msg->msg_flags&MSG_DONTWAIT, &rc);
+    if(skb == NULL)
+	goto out;
+
+    skb_reserve(skb, slen - len);
+
+    printk(KERN_INFO "SPP: sendmsg: adding user data into the equation.\n");
+
+    if(memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len)){
+	rc = -EFAULT;
+	kfree_skb(skb);
+	goto out;
+    }
+    skb_reset_network_header(skb);
+
+    printk(KERN_INFO "SPP: sendmsg: transmitting buffer\n");
+
+    /* Handle packets in a sequence here */
+    /* determine this if the data length is greater than 1k */
+
+    skb_push(skb, sizeof(struct spphdr));
+    hdr = spp_hdr(skb);
+    hdr->pvn = 0;
+    hdr->pt = 0; /*TODO: configure this to actually be able to swithc between TM and TC */
+    hdr->shf = 0; /* TODO: one day we will support secondary headers */
+    hdr->apid = daddr.sspp_addr.spp_apid;
+    hdr->seqflgs = 3; /* This is unsegmented data, therefore it is 11b or 3 in dec */
+    hdr->psc = 0; /* This is unsegmented data, so we will always be the first packet in the count */
+    pdf->pdl = len - 1;
+    printk(KERN_INFO "SPP: sendmsg: built header of %d bytes\n", sizeof(struct spphdr));
+    /* Note: this should always be the same number, 6 bytes */
+
+    skb_set_transport_header(skb, sizeof(struct spphdr));
+
+    /* We aren't in an sequence of packets, so UnSegmented */
+    /* *skb_transport_header(skb) = SPP_US; 
+     *  But I don't think it needs to be set, because this gets sent on the line too...
+     * */
+
+    spp_queue_xmit(skb, spp->spp_dev->dev);
+
+    rc = len;
 
     printk(KERN_INFO "SPP: sendmsg: Completed sendmsg");
+out:
+    release_sock(sk);
+    return rc;
 }
 
 /*
@@ -480,7 +541,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     lock_kernel();
     /* Bring the user request into kernel space */
     if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
-        goto out;
+	goto out;
     ifr.ifr_name[IFNAMSIZ - 1] = 0; /* Why? */
 
     memcpy(&sin_orig,sin, sizeof(*sin)); /* Copy the old address for comparison */
@@ -491,105 +552,105 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     dev = __dev_get_by_name(&init_net, ifr.ifr_name);
 
     if(!dev)
-        goto done;
+	goto done;
     spp_device = __spp_dev_get_rtnl(dev);
     if(spp_device){
-        for(ifap = &spp_device->ifa_list; (ifa = *ifap) != NULL; ifap = &ifa->ifa_next)
-        {
-            if(!strcmp(ifr.ifr_name, ifa->ifa_label))
-                break;
-        }
+	for(ifap = &spp_device->ifa_list; (ifa = *ifap) != NULL; ifap = &ifa->ifa_next)
+	{
+	    if(!strcmp(ifr.ifr_name, ifa->ifa_label))
+		break;
+	}
     }
     switch (cmd) {
-        case TIOCOUTQ: {
-            int amount = sk->sk_sndbuf - sk_wmem_alloc_get(sk);
-            if (amount < 0)
-                amount = 0;
-            rc = put_user(amount, (unsigned int __user *)argp);
-            break;
-        }
-        case TIOCINQ: {
-            struct sk_buff *skb;
-            int amount = 0;
-            if((skb = skb_peek(&sk->sk_receive_queue)) != NULL)
-                amount = skb->len;
-            rc = put_user(amount, (unsigned int __user *)argp);
-            break;
-        }
-        case SIOCGSTAMP: {
-                rc = -EINVAL;
-                if (sk)
-                        rc = sock_get_timestamp(sk,
-                                        (struct timeval __user *)argp);
-                break;
-        }
-        case SIOCGSTAMPNS: {
-                rc = -EINVAL;
-                if (sk)
-                        rc = sock_get_timestampns(sk,
-                                        (struct timespec __user *)argp);
-                break;
-        }
-        case SIOCGIFADDR: {
-                memset(sin, 0, sizeof(*sin));
-                sin->sspp_family = AF_SPP;
-                sin->sspp_addr.spp_apid = ifa->ifa_local;
-                printk(KERN_INFO "SPP: IOCTL: Get Interface Address\n");
-                goto rarok;
-        }
-        case SIOCSIFADDR: {
-                rc = -EACCES;
-                if(!capable(CAP_NET_ADMIN))
-                    goto out;
-                rc = -EINVAL;
-                if (sin->sspp_family != AF_SPP)
-                    goto out;
-                if(!sppval(&(sin->sspp_addr)))
-                    break;
-                if(!ifa){
-                    rc = -ENOBUFS;
-                    ifa = spp_alloc_ifa();
-                    if(!ifa)
-                        break;
-                    memcpy(ifa->ifa_label, dev->name, IFNAMSIZ);
-                }
-                else {
-                    rc = 0;
-                    if(ifa->ifa_local == sin->sspp_addr.spp_apid)
-                        break;
-                    spp_del_ifa(spp_device, ifap, 0);
-                }
-                ifa->ifa_address = ifa->ifa_local = sin->sspp_addr.spp_apid;
-                rc = spp_set_ifa(dev, ifa);
-                printk(KERN_INFO "SPP: IOCTL: Set Interface Address\n");
-                break;
-        }
-        case SIOCSIFFLAGS: {
-                rc = -EACCES;
-                if(!capable(CAP_NET_ADMIN))
-                    goto out;
-                /* TODO: change device flags...data from ifr.ifr_flags applied to dev*/
-                printk(KERN_INFO "SPP: IOCTL: Set Interface Flags\n");
-                rc = 0;
-                break;
-        }
-        case SIOCGIFFLAGS: {
-                /* TODO: Return current flags...*/
-                printk(KERN_INFO "SPP: IOCTL: Get Interface Flags\n");
-                rc = 0;
-                break;
-        }
-        case SIOCGIFMTU: {
-                /* TODO: Get current interface MTU */
-                break;
-        }
-        case SIOCSIFMTU: {
-                /* TODO: Set interface MTU */
-                break;
-        }
-        default:
-            return -ENOIOCTLCMD;
-            break;
+	case TIOCOUTQ: {
+			   int amount = sk->sk_sndbuf - sk_wmem_alloc_get(sk);
+			   if (amount < 0)
+			       amount = 0;
+			   rc = put_user(amount, (unsigned int __user *)argp);
+			   break;
+		       }
+	case TIOCINQ: {
+			  struct sk_buff *skb;
+			  int amount = 0;
+			  if((skb = skb_peek(&sk->sk_receive_queue)) != NULL)
+			      amount = skb->len;
+			  rc = put_user(amount, (unsigned int __user *)argp);
+			  break;
+		      }
+	case SIOCGSTAMP: {
+			     rc = -EINVAL;
+			     if (sk)
+				 rc = sock_get_timestamp(sk,
+					 (struct timeval __user *)argp);
+			     break;
+			 }
+	case SIOCGSTAMPNS: {
+			       rc = -EINVAL;
+			       if (sk)
+				   rc = sock_get_timestampns(sk,
+					   (struct timespec __user *)argp);
+			       break;
+			   }
+	case SIOCGIFADDR: {
+			      memset(sin, 0, sizeof(*sin));
+			      sin->sspp_family = AF_SPP;
+			      sin->sspp_addr.spp_apid = ifa->ifa_local;
+			      printk(KERN_INFO "SPP: IOCTL: Get Interface Address\n");
+			      goto rarok;
+			  }
+	case SIOCSIFADDR: {
+			      rc = -EACCES;
+			      if(!capable(CAP_NET_ADMIN))
+				  goto out;
+			      rc = -EINVAL;
+			      if (sin->sspp_family != AF_SPP)
+				  goto out;
+			      if(!sppval(&(sin->sspp_addr)))
+				  break;
+			      if(!ifa){
+				  rc = -ENOBUFS;
+				  ifa = spp_alloc_ifa();
+				  if(!ifa)
+				      break;
+				  memcpy(ifa->ifa_label, dev->name, IFNAMSIZ);
+			      }
+			      else {
+				  rc = 0;
+				  if(ifa->ifa_local == sin->sspp_addr.spp_apid)
+				      break;
+				  spp_del_ifa(spp_device, ifap, 0);
+			      }
+			      ifa->ifa_address = ifa->ifa_local = sin->sspp_addr.spp_apid;
+			      rc = spp_set_ifa(dev, ifa);
+			      printk(KERN_INFO "SPP: IOCTL: Set Interface Address\n");
+			      break;
+			  }
+	case SIOCSIFFLAGS: {
+			       rc = -EACCES;
+			       if(!capable(CAP_NET_ADMIN))
+				   goto out;
+			       /* TODO: change device flags...data from ifr.ifr_flags applied to dev*/
+			       printk(KERN_INFO "SPP: IOCTL: Set Interface Flags\n");
+			       rc = 0;
+			       break;
+			   }
+	case SIOCGIFFLAGS: {
+			       /* TODO: Return current flags...*/
+			       printk(KERN_INFO "SPP: IOCTL: Get Interface Flags\n");
+			       rc = 0;
+			       break;
+			   }
+	case SIOCGIFMTU: {
+			     /* TODO: Get current interface MTU */
+			     break;
+			 }
+	case SIOCSIFMTU: {
+			     /* TODO: Set interface MTU */
+			     break;
+			 }
+	default:
+			 return -ENOIOCTLCMD;
+			 break;
     }
     unlock_kernel();
 done:
@@ -660,22 +721,22 @@ static int __init spp_init(void)
     rc = proto_register(&spp_proto, 0);
 
     if( rc != 0)
-        goto out;
+	goto out;
     rc = sock_register(&spp_family_ops);
     if(rc != 0)
-        goto out_proto;
+	goto out_proto;
 
     dev_add_pack(&spp_packet_type);
 
     rc = register_netdevice_notifier(&spp_dev_notifier);
     if(rc != 0)
-        goto out_sock;
+	goto out_sock;
 
     printk(KERN_INFO "SPP For Linux Version 0.1\n");
     spp_register_sysctl();
     rc = spp_proc_init();
     if(rc != 0)
-        goto out_dev;
+	goto out_dev;
 
 out:
     return rc;

@@ -47,5 +47,7 @@ void spp_output(struct sock *sk, struct sk_buff *skb)
 /* Handles actually pushing the packet out the door */
 void spp_queue_xmit(struct sk_buff *skb, struct net_device *dev)
 {
-
+    unsigned char *ptr;
+    skb->protocol = spp_type_trans(skb, dev);
+    dev_queue_xmit(skb);
 }
