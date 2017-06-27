@@ -501,7 +501,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     printk(KERN_INFO "SPP: sendmsg: built header of %d bytes\n", sizeof(struct spphdr));
     /* Note: this should always be the same number, 6 bytes */
 
-    skb_set_transport_header(skb, sizeof(struct spphdr));
+    skb_set_network_header(skb, sizeof(struct spphdr));
 
     spp_queue_xmit(skb, spp->device);
 
