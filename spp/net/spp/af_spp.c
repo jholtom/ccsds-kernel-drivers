@@ -482,14 +482,15 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 	kfree_skb(skb);
 	goto out;
     }
-    skb_reset_network_header(skb);
 
     printk(KERN_INFO "SPP: sendmsg: transmitting buffer\n");
 
     /* Handle packets in a sequence here */
     /* determine this if the data length is greater than 1k */
 
-    hdr = (struct spphdr *) skb_push(skb, sizeof(struct spphdr));
+    skb_push(skb, sizeof(struct spphdr));
+    skb_reset_network_header(skb);
+    hdr = skb_hdr(skb);
     hdr->pvn = 0;
     hdr->pt = 0; /*TODO: configure this to actually be able to swithc between TM and TC */
     hdr->shf = 0; /* TODO: one day we will support secondary headers */
@@ -500,11 +501,14 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     printk(KERN_INFO "SPP: sendmsg: built header of %d bytes\n", sizeof(struct spphdr));
     /* Note: this should always be the same number, 6 bytes */
 
+/*    skb->priority = sk->sk_priority;
+    skb->mark = sk->sk_mark; */
+
     spp_queue_xmit(skb, spp->device);
 
     rc = len;
 
-    printk(KERN_INFO "SPP: sendmsg: Completed sendmsg");
+    printk(KERN_INFO "SPP: sendmsg: Completed sendmsg\n");
 out:
     release_sock(sk);
     return rc;
