@@ -22,6 +22,21 @@
 
 #define SPP_MTU 65535 /* can be max length of 64K */
 
+struct spphdr {
+        __u8 pvn:3,
+             pt:1,
+             shf:1;
+        __be16 apid:11;
+        __u8 seqflgs:2;
+        __be16 psc:14;
+        __be16 pdl;
+};
+
+static inline struct iphdr *ip_hdr(const struct sk_buff *skb)
+{
+    return (struct iphdr *)skb_network_header(skb);
+}
+
 typedef struct {
     unsigned int spp_apid : 11; /* 11 bit APID */
     /* Done in a struct to facilitate expansion to other addressing parameters (unlikely) */

@@ -51,7 +51,8 @@ void spp_disconnect(struct sock *sk, int reason, unsigned char cause, unsigned c
     }
 }
 
-int spp_kiss_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev)
+int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev)
 {
+    printk("SPP: spp_rcv: got packet in over SLIP.");
     return 0;
 }

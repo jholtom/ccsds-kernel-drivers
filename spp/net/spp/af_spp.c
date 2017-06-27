@@ -400,90 +400,47 @@ out:
 
 /*
  * Socket Send Message
- * TODO: Complete method with correct implementation
  */
 static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg, size_t len)
 {
     struct sock *sk = sock->sk;
-    struct spp_sock *spp = spp_sk(sk); /* Get SPP specific socket representation */
-    DECLARE_SOCKADDR(struct sockaddr_spp *, usspp, msg->msg_name); /* Use this macro to do x,y,y */
-    struct sockaddr_spp sspp; /* Temporary addressing struct */
-    struct sk_buff *skb; /* Socket buffer for message handling */
-    unsigned char *asmptr;
-    int noblock = msg->msg_flags & MSG_DONTWAIT;
-    size_t size;
-    int rc = -EINVAL;
+    struct spp_sock *spp = spp_sk(sk);
+    int slen = len;
+    int free, connected = 0;
+    spp_address daddr,saddr;
+    int rc;
+    int (*getfrag)(void *, char *, int, int, int, struct sk_buff *);
 
-    lock_kernel();
+    /* Check that length is not too big */
+    if(len > 0xFFFF)
+        return -EMSGSIZE;
 
-    if(msg->msg_flags & ~(MSG_DONTWAIT|MSG_OOB|MSG_EOR|MSG_CMSG_COMPAT))
-        goto out;
+    /* Check if someone wants OOB data, cause we don't do it */
+    if(msg->msg_flags & MSB_OOB)
+        return -EOPNOTSUPP;
 
-    printk(KERN_INFO "SPP: Checked message flags and passed!\n");
+    /* No corking here...so don't worry about it */
 
-    rc = -EADDRNOTAVAIL;
-    if(sock_flag(sk,SOCK_ZAPPED))
-        goto out;
+    /* slen contains the full length of the packet, so add on the header length */
+    slen += sizeof(struct spphdr);
 
-    rc = -EPIPE;
-    if (sk->sk_shutdown & SEND_SHUTDOWN){
-        send_sig(SIGPIPE, current, 0);
-        goto out;
-    }
-    printk(KERN_INFO "SPP: Everything is still alive, lets go!\n");
-
-    if(usspp) {
-        rc = -EINVAL;
-        if(msg->msg_namelen < sizeof(sspp))
-            goto out;
-        printk(KERN_INFO "SPP: DEBUG: passed length check\n");
-        memcpy(&sspp, usspp, sizeof(sspp));
-        rc = -EISCONN;
-        if (sppcmp(&(spp->d_addr), &sspp.sspp_addr))
-            goto out;
-        rc = -EINVAL;
-        if(sspp.sspp_family != AF_SPP)
-            goto out;
-        printk(KERN_INFO "SPP: DEBUG: passed AF type check\n");
+    if(msg->msg_name){
+        /* Check that we have a valid address on our hands and fill out the bits and bobs we need to actually xmit */
     } else {
-       rc = -ENOTCONN;
-       if (sk->sk_state != TCP_ESTABLISHED)
-           goto out;
-
-       sspp.sspp_family = AF_SPP;
-       sspp.sspp_addr = spp->d_addr;
+        /* if we aren't established, bail out now, DESTADDRREQ */
+        /* If we are, assign our data fields the things we want to know about our destination */
     }
-    if (len > 65535) {
-        rc = -EMSGSIZE;
-        goto out;
-    }
-    printk(KERN_INFO "SPP: sendmsg: Addresses assembled. Making packet.\n");
+    /* sk->sk_bound_dev_if should be our output interface index*/
+    printk(KERN_INFO "SPP: sendmsg: Bound to Interface Index: %d", sk->sk_bound_dev_if);
 
-    /* FIXME: we aren't doing OutOfBand data at all right now */
+    /* Get a transmit timestamp */
 
-    size = len + SPP_HEADER_LEN; /* TODO: Create this #define in net/spp.h */
+    /* Set addresses */
 
-    skb = sock_alloc_send_skb(sk, size, msg->msg_flags&MSG_DONTWAIT, &rc);
-    if(skb == NULL)
-        goto out;
 
-    skb_reserve(skb, size - len);
-    printk(KERN_INFO "SPP: Adding user data\n");
 
-    if(memcpy_fromiovec(skb_put(skb,len), msg->msg_iov, len)){
-        rc = -EFAULT;
-        kfree_skb(skb);
-        goto out;
-    }
 
-    skb_reset_network_header(skb);
-
-    printk(KERN_INFO "SPP: Transmitting buffer\n");
-
-    rc = 0;
-
-out:
-    return rc;
+    printk(KERN_INFO "SPP: sendmsg: Completed sendmsg");
 }
 
 /*
@@ -494,10 +451,11 @@ static int spp_recvmsg(struct socket *sock, struct msghdr *msg, size_t size, int
 {
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk); /* SPP specific socket representation */
-    size_t copied;
-    unsigned char *asmptr;
+    struct sockaddr_spp *sspp = (struct sockaddr_spp *)msg->msg_name;
+    unsigned int ulen, copied;
+    int peeked;
+    int rc;
     struct sk_buff *skb; /* Socket Buffer for message handling */
-    int n, er, qbit;
 
 }
 
@@ -683,7 +641,7 @@ static const struct proto_ops spp_proto_ops = {
  */
 static struct packet_type spp_packet_type __read_mostly = {
     .type = cpu_to_be16(ETH_P_SPP),
-    .func = spp_kiss_rcv,
+    .func = spp_rcv,
 };
 
 /*

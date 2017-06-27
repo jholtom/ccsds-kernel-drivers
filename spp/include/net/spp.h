@@ -37,10 +37,6 @@
 
 #define SPP_PKTTYPE 27 /* TODO: fix location of this (maybe), and assign a better value */
 
-struct spp_entity {
-    /* An end of the connection - May not need because we have no true 'routing' support */
-};
-
 struct spp_sock {
     struct sock sock;
     spp_address s_addr, d_addr;
@@ -62,8 +58,7 @@ struct spp_ifaddr {
     struct spp_ifaddr *ifa_next;
     struct spp_dev *spp_dev;
     struct rcu_head rcu_head;
-    unsigned int ifa_local;
-    unsigned int ifa_address;
+    __be16 ifa_local : 11, ifa_address : 11;
     unsigned char ifa_flags;
     char ifa_label[IFNAMSIZ];
 };
@@ -79,6 +74,14 @@ struct spp_dev {
 
 extern struct hlist_head spp_list;
 extern spinlock_t spp_list_lock;
+
+static inline __be16 spp_type_trans(struct sk_buff *skb, struct net_device *dev)
+{
+    skb->dev = dev;
+    skb_reset_mac_header(skb);
+    skb->packet_type = PACKET_HOST;
+    return htons(ETH_P_SPP);
+}
 
 /* af_spp.c */
 extern int sysctl_spp_idle_timer;
@@ -136,7 +139,7 @@ extern int spp_del_ifa(struct spp_dev *spp_device, struct spp_ifaddr **ifap, int
 
 /* spp_methods.c */
 extern void spp_disconnect(struct sock *sk, int reason, unsigned char cause, unsigned char diagnostic);
-extern int spp_kiss_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev);
+extern int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev);
 
 /* spp_in.c */
 extern int spp_process_rx(struct sock *, struct sk_buff *);
