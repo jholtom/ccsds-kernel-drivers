@@ -496,7 +496,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
      *  But I don't think it needs to be set, because this gets sent on the line too...
      * */
 
-    spp_queue_xmit(skb, spp->device->dev);
+    spp_queue_xmit(skb, spp->device);
 
     rc = len;
 
