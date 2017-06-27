@@ -47,8 +47,8 @@ static BLOCKING_NOTIFIER_HEAD(sppaddr_chain);
 
 struct spp_dev *spp_addr_sppdev(spp_address *addr)
 {
-    spp_dev *spp_dev, *res = NULL;
-    spp_ifaddr *s;
+    struct spp_dev *spp_dev, *res = NULL;
+    struct spp_ifaddr *s;
     spin_lock_bh(&spp_dev_lock);
     for(spp_dev = spp_dev_list; spp_dev != NULL; spp_dev = spp_dev->next)
     {
