@@ -40,12 +40,12 @@
 #include <linux/interrupt.h>
 #include <linux/init.h>
 
-spp_dev *spp_dev_list;
+struct spp_dev *spp_dev_list;
 DEFINE_SPINLOCK(spp_dev_lock);
 
 static BLOCKING_NOTIFIER_HEAD(sppaddr_chain);
 
-spp_dev *spp_addr_sppdev(spp_address *addr)
+struct spp_dev *spp_addr_sppdev(spp_address *addr)
 {
     spp_dev *spp_dev, *res = NULL;
     spp_ifaddr *s;
@@ -89,7 +89,7 @@ void spp_dev_device_up(struct net_device *dev)
     dev_hold(dev);
     spp_dev_hold(spp_dev);
 
-    spin_lock_bh(spp_dev_lock);
+    spin_lock_bh(&spp_dev_lock);
     spp_dev->next = spp_dev_list;
     spp_dev_list = spp_dev;
     spin_unlock_bh(&spp_dev_lock);
