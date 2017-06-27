@@ -448,7 +448,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     } else {
 	if(sk->sk_state != TCP_ESTABLISHED){
 	    rc = -ENOTCONN;
-	    got out;
+	    goto out;
 	}
 	daddr.sspp_family = AF_SPP;
 	daddr.sspp_addr = spp->d_addr;
