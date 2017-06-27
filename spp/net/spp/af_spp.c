@@ -503,9 +503,6 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
     skb_set_transport_header(skb, sizeof(struct spphdr));
 
-    /* We aren't in an sequence of packets, so UnSegmented */
-    *skb_transport_header(skb) = 0x03; /* TODO: Change this to a #define */
-
     spp_queue_xmit(skb, spp->device);
 
     rc = len;
