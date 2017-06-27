@@ -490,7 +490,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
     skb_push(skb, sizeof(struct spphdr));
     skb_reset_network_header(skb);
-    hdr = skb_hdr(skb);
+    hdr = spp_hdr(skb);
     hdr->pvn = 0;
     hdr->pt = 0; /*TODO: configure this to actually be able to swithc between TM and TC */
     hdr->shf = 0; /* TODO: one day we will support secondary headers */
