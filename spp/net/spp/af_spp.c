@@ -489,8 +489,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     /* Handle packets in a sequence here */
     /* determine this if the data length is greater than 1k */
 
-    skb_push(skb, sizeof(struct spphdr));
-    hdr = spp_hdr(skb);
+    hdr = (struct spphdr *) skb_push(skb, sizeof(struct spphdr));
     hdr->pvn = 0;
     hdr->pt = 0; /*TODO: configure this to actually be able to swithc between TM and TC */
     hdr->shf = 0; /* TODO: one day we will support secondary headers */
@@ -500,8 +499,6 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->pdl = len - 1;
     printk(KERN_INFO "SPP: sendmsg: built header of %d bytes\n", sizeof(struct spphdr));
     /* Note: this should always be the same number, 6 bytes */
-
-    skb_set_network_header(skb, sizeof(struct spphdr));
 
     spp_queue_xmit(skb, spp->device);
 
