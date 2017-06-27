@@ -40,7 +40,27 @@
 #include <linux/interrupt.h>
 #include <linux/init.h>
 
+spp_dev *spp_dev_list;
+DEFINE_SPINLOCK(spp_dev_lock);
+
 static BLOCKING_NOTIFIER_HEAD(sppaddr_chain);
+
+spp_dev *spp_addr_sppdev(spp_address *addr)
+{
+    spp_dev *spp_dev, *res = NULL;
+    spp_ifaddr *s;
+    spin_lock_bh(&spp_dev_lock);
+    for(spp_dev = spp_dev_list; spp_dev != NULL; spp_dev = spp_dev->next)
+    {
+        for(s = spp_dev->ifa_list; s != NULL; s = s->ifa_next){
+            if((addr->spp_apid = s->ifa_address) == 0){
+                res = spp_dev;
+            }
+        }
+    }
+    spin_unlock_bh(&spp_dev_lock);
+    return res;
+}
 
 static void spp_rcu_free_ifa(struct rcu_head *head)
 {
@@ -69,6 +89,11 @@ void spp_dev_device_up(struct net_device *dev)
     dev_hold(dev);
     spp_dev_hold(spp_dev);
 
+    spin_lock_bh(spp_dev_lock);
+    spp_dev->next = spp_dev_list;
+    spp_dev_list = spp_dev;
+    spin_unlock_bh(&spp_dev_lock);
+
     rcu_assign_pointer(dev->spp_ptr, spp_dev);
 out:
     return spp_dev;
@@ -82,7 +107,7 @@ static void spp_dev_rcu_put(struct rcu_head *head){
 void spp_dev_device_down(struct net_device *dev)
 {
     struct sppifaddr *ifa;
-    struct spp_dev *spp_dev;
+    struct spp_dev *spp_dev,*s;
     spp_dev = dev->spp_ptr;
 
     ASSERT_RTNL();
@@ -92,7 +117,26 @@ void spp_dev_device_down(struct net_device *dev)
         spp_free_ifa(ifa);
     }
     dev->spp_ptr = NULL;
-    call_rcu(&spp_dev->rcu_head, spp_dev_rcu_put);
+
+    spin_lock_bh(&spp_dev_lock);
+    if((s = spp_dev_list) == spp_dev){
+        spp_dev_list = s->next;
+        spin_unlock_bh(&spp_dev_lock);
+        call_rcu(&spp_dev->rcu_head, spp_dev_rcu_put);
+        return;
+    }
+    while(s != NULL && s->next != NULL){
+        if(s->next == spp_dev){
+            s->next = spp_dev->next;
+            spin_unlock_bh(&spp_dev_lock);
+            call_rcu(&spp_dev->rcu_head, spp_dev_rcu_put);
+            return;
+        }
+        s = s->next;
+    }
+    spin_unlock_bh(&spp_dev_lock);
+/* Should be called earlier...
+    call_rcu(&spp_dev->rcu_head, spp_dev_rcu_put);*/
 }
 
 

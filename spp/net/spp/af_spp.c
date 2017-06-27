@@ -277,6 +277,7 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 {
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
+    spp_dev *spp_dev = NULL;
     struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
     int len, i, rc = 0;
 
@@ -294,13 +295,24 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 	goto out_release_sock;
 
     spp->s_addr.spp_apid = addr->sspp_addr.spp_apid;
-    spp_insert_socket(sk);
     sock_reset_flag(sk, SOCK_ZAPPED);
     if(spp->s_addr.spp_apid)
 	sk->sk_userlocks |= SOCK_BINDADDR_LOCK;
     spp->d_addr.spp_apid = 0;
     sk_dst_reset(sk);
+
+    if(spp->device != NULL)
+        goto done;
+    /* Probably should guard this eventually: TODO */
+    spp_dev = spp_addr_sppdev(&addr->sspp_addr);
+
+    spp->device = spp_dev;
+
     rc = 0;
+
+done:
+    spp_insert_socket(spp);
+    sock_reset_flag(sk, SOCK_ZAPPED);
 out_release_sock:
     release_sock(sk);
 out:
