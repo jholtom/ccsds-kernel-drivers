@@ -19,6 +19,7 @@
  */
 
 #include <linux/socket.h>
+#include <linux/skbuff.h>
 
 #define SPP_MTU 65535 /* can be max length of 64K */
 
