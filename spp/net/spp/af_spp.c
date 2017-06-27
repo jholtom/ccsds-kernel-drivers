@@ -406,17 +406,19 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
     int free, connected = 0;
+    struct sk_buff *skb;
     struct sockaddr_spp *usspp = (struct sockaddr_spp *)msg->msg_name;
-    spp_address daddr,saddr;
+    struct sockaddr_spp daddr;
     struct spphdr *hdr;
     int rc,slen;
+    int addr_len = msg->msg_namelen;
 
     /* Check that length is not too big */
     if(len > 0xFFFF)
 	return -EMSGSIZE;
 
     /* Check if someone wants OOB data, cause we don't do it */
-    if(msg->msg_flags & MSB_OOB)
+    if(msg->msg_flags & MSG_OOB)
 	return -EOPNOTSUPP;
 
     lock_sock(sk);
@@ -432,7 +434,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 	goto out;
     }
 
-    if(spp->spp_dev == NULL){
+    if(spp->device == NULL){
 	rc = -ENETUNREACH;
 	goto out;
     }
@@ -483,18 +485,18 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->apid = daddr.sspp_addr.spp_apid;
     hdr->seqflgs = 3; /* This is unsegmented data, therefore it is 11b or 3 in dec */
     hdr->psc = 0; /* This is unsegmented data, so we will always be the first packet in the count */
-    pdf->pdl = len - 1;
+    hdr->pdl = len - 1;
     printk(KERN_INFO "SPP: sendmsg: built header of %d bytes\n", sizeof(struct spphdr));
     /* Note: this should always be the same number, 6 bytes */
 
     skb_set_transport_header(skb, sizeof(struct spphdr));
 
     /* We aren't in an sequence of packets, so UnSegmented */
-    /* *skb_transport_header(skb) = SPP_US; 
+    /* *skb_transport_header(skb) = SPP_US;
      *  But I don't think it needs to be set, because this gets sent on the line too...
      * */
 
-    spp_queue_xmit(skb, spp->spp_dev->dev);
+    spp_queue_xmit(skb, spp->device->dev);
 
     rc = len;
 
