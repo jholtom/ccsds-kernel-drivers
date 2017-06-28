@@ -465,11 +465,8 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 	daddr.sspp_family = AF_SPP;
 	daddr.sspp_addr = spp->d_addr;
     }
-    printk(KERN_INFO "SPP: sendmsg: Got addresses.  Building Packet\n");
 
     slen = sizeof(struct spphdr) + len;
-
-    printk(KERN_INFO "SPP: sendmsg: %p: Size needed %d, device %s\n",sk,slen,spp->device->name);
 
     skb = sock_alloc_send_skb(sk, slen, (msg->msg_flags & MSG_DONTWAIT), &rc);
     if(!skb)
@@ -480,9 +477,8 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     skb->protocol = spp_type_trans(skb, spp->device);
     skb_reserve(skb, sizeof(struct spphdr));
 
-    printk(KERN_INFO "SPP: sendmsg: %p: Begin Packet Building.\n",sk);
-    int pkttype = 0;
-    int shf = 0;
+    int pkttype = 0; /* TODO: allow setting of packet type (TM/TC) */
+    int shf = 0; /* TODO: Enable secondary header support */
     hdr = (struct spphdr *)skb_push(skb, sizeof(struct spphdr));
     hdr->fields = 0;
     hdr->fields = (hdr->fields << 1) | (pkttype ? 0x00000001 : 0x00000000);
@@ -493,19 +489,15 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->fields = htonl(hdr->fields);
     hdr->pdl = htons(len); /* Just the length of the actual user data */
 
-    printk(KERN_INFO "SPP: sendmsg: %p: Copying user data (%Zd bytes).\n", sk, len);
-
     rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
     if(rc){
         kfree_skb(skb);
         rc = -EFAULT;
         goto out;
     }
-    printk(KERN_INFO "SPP: sendmsg: calling dev_queue_xmit\n");
     dev_queue_xmit(skb);
     rc = len;
 
-    printk(KERN_INFO "SPP: sendmsg: Completed sendmsg\n");
 out:
     release_sock(sk);
     return rc;
