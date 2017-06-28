@@ -481,7 +481,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
     printk(KERN_INFO "SPP: sendmsg: %p: Begin Packet Building.\n",sk);
 
-    hdr = (struct spphdr *)skb_put(skb, sizeof(struct spphdr));
+    hdr = (struct spphdr *)skb_push(skb, sizeof(struct spphdr));
     hdr->pvn = 0; /* Standard is for this to always be 0 */
     hdr->pt = 0; /*TODO: enable switching between TM and TC packets */
     hdr->shf = 0; /* TODO: support secondary headers */
@@ -490,6 +490,8 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->seqflgs = 3; /* We are unsegmented data */
     hdr->psc = 0; /* We are unsegmented, therefore we are always the first packet */
     hdr->pdl = len; /* Just the length of the actual user data */
+
+    printk(KERN_INFO "SPP: sendmsg: %p: Copying user data (%Zd bytes).\n", sk, len);
 
     rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
     if(rc){
