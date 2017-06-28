@@ -486,11 +486,11 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->pvn = 0; /* Standard is for this to always be 0 */
     hdr->pt = 0; /*TODO: enable switching between TM and TC packets */
     hdr->shf = 0; /* TODO: support secondary headers */
-    hdr->apid = daddr.sspp_addr.spp_apid;
+    hdr->apid = htons(daddr.sspp_addr.spp_apid);
     printk(KERN_INFO "SPP: sendmsg: %p: Destination APID is: %d\n", sk, hdr->apid);
     hdr->seqflgs = 3; /* We are unsegmented data */
     hdr->psc = 0; /* We are unsegmented, therefore we are always the first packet */
-    hdr->pdl = len; /* Just the length of the actual user data */
+    hdr->pdl = htons(len); /* Just the length of the actual user data */
 
     printk(KERN_INFO "SPP: sendmsg: %p: Copying user data (%Zd bytes).\n", sk, len);
 
