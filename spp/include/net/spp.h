@@ -147,7 +147,6 @@ extern int spp_process_rx(struct sock *, struct sk_buff *);
 extern int spp_backlog_rcv(struct sock *, struct sk_buff *);
 
 /* spp_out.c */
-extern void spp_queue_xmit(struct sk_buff *skb, struct net_device *dev);
 
 /* spp_proc.c */
 extern int spp_proc_init(void);

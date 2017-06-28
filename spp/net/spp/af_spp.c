@@ -476,8 +476,9 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         goto out;
 
     skb->sk = sk;
+    skb->dev = spp->device;
+    skb->protocol = spp_type_trans(skb, spp->device);
     skb_reserve(skb, sizeof(struct spphdr));
-    skb_reserve(skb, spp->device->hard_header_len);
 
     printk(KERN_INFO "SPP: sendmsg: %p: Begin Packet Building.\n",sk);
 
@@ -499,8 +500,8 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         rc = -EFAULT;
         goto out;
     }
-    spp_queue_xmit(skb, spp->device);
-
+    printk(KERN_INFO "SPP: sendmsg: calling dev_queue_xmit\n");
+    dev_queue_xmit(skb);
     rc = len;
 
     printk(KERN_INFO "SPP: sendmsg: Completed sendmsg\n");
