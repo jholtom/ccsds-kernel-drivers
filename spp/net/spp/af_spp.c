@@ -487,7 +487,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->shf = 0; /* TODO: support secondary headers */
     hdr->apid = daddr.sspp_addr.spp_apid;
     printk(KERN_INFO "SPP: sendmsg: %p: Destination APID is: %d\n", sk, hdr->apid);
-    hdr->seqflgs = 3; /* We are unsegmented data */.
+    hdr->seqflgs = 3; /* We are unsegmented data */
     hdr->psc = 0; /* We are unsegmented, therefore we are always the first packet */
     hdr->pdl = len; /* Just the length of the actual user data */
 
