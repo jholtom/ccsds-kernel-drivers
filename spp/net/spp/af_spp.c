@@ -493,7 +493,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
     printk(KERN_INFO "SPP: sendmsg: %p: Copying user data (%Zd bytes).\n", sk, len);
 
-    rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
+    rc = memcpy_fromiovec(skb_push(skb,len), msg->msg_iov,len);
     if(rc){
         kfree_skb(skb);
         rc = -EFAULT;
