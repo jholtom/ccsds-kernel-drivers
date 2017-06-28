@@ -24,12 +24,7 @@
 #define SPP_MTU 65535 /* can be max length of 64K */
 
 struct spphdr {
-        __u8 pvn:3,
-             pt:1,
-             shf:1;
-        __be16 apid:11;
-        __u8 seqflgs:2;
-        __be16 psc:14;
+        unsigned int fields;
         __be16 pdl;
 }__attribute__((packed));
 
