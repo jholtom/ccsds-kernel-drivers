@@ -306,7 +306,7 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
     /* Probably should guard this eventually: TODO */
     spp_dev = spp_addr_sppdev(&addr->sspp_addr);
 
-    spp->device = spp_dev;
+    spp->device = spp_dev->dev;
 
     rc = 0;
 

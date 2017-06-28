@@ -31,7 +31,7 @@ struct spphdr {
         __u8 seqflgs:2;
         __be16 psc:14;
         __be16 pdl;
-};
+}__attribute__((packed));
 
 typedef struct {
     unsigned int spp_apid : 11; /* 11 bit APID */
