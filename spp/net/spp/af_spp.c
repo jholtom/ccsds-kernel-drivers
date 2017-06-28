@@ -481,19 +481,16 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     skb_reserve(skb, sizeof(struct spphdr));
 
     printk(KERN_INFO "SPP: sendmsg: %p: Begin Packet Building.\n",sk);
-
+    int pkttype = 0;
+    int shf = 0;
     hdr = (struct spphdr *)skb_push(skb, sizeof(struct spphdr));
-    hdr->fields = htonl(0x07D2C000);
-    /* TODO: make macro, Packet Ver Num should always be 000 */
-    //hdr->fields = hdr->fields << 1;
-    //hdr->fields |= 0x00000000; /*TODO: allow to be set to 1 for TC */
-    //hdr->fields = hdr->fields << 1;
-    //hdr->fields |= 0 /* TODO: allow for secondary headers to be set */
-    //hdr->fields = hdr->fields << 11;
-    //hdr->apid = htons(daddr.sspp_addr.spp_apid);
-    //printk(KERN_INFO "SPP: sendmsg: %p: Destination APID is: %d\n", sk, hdr->apid);
-    //hdr->seqflgs = 3; /* We are unsegmented data */
-    //hdr->psc = 0; /* We are unsegmented, therefore we are always the first packet */
+    hdr->fields = 0;
+    hdr->fields = (hdr->fields << 1) | (pkttype ? 0x00000001 : 0x00000000);
+    hdr->fields = (hdr->fields << 1) | (shf ? 0x00000001 : 0x00000000);
+    hdr->fields = (hdr->fields << 11) | daddr.sspp_addr.spp_apid;
+    hdr->fields = (hdr->fields << 2) | 0x00000003; /* We are unsegmented data */
+    hdr->fields = (hdr->fields << 14) | 0x00000000; /* We are unsegmented data, always the first packet */
+    hdr->fields = htonl(hdr->fields);
     hdr->pdl = htons(len); /* Just the length of the actual user data */
 
     printk(KERN_INFO "SPP: sendmsg: %p: Copying user data (%Zd bytes).\n", sk, len);
