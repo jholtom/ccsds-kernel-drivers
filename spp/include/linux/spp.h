@@ -33,11 +33,6 @@ struct spphdr {
         __be16 pdl;
 };
 
-static inline struct spphdr *spp_hdr(const struct sk_buff *skb)
-{
-    return (struct spphdr *)skb_network_header(skb);
-}
-
 typedef struct {
     unsigned int spp_apid : 11; /* 11 bit APID */
     /* Done in a struct to facilitate expansion to other addressing parameters (unlikely) */

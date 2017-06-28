@@ -465,45 +465,39 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 	daddr.sspp_family = AF_SPP;
 	daddr.sspp_addr = spp->d_addr;
     }
-    printk(KERN_INFO "SPP: sendmsg: Addresses ready, building packet.\n");
+    printk(KERN_INFO "SPP: sendmsg: Got addresses.  Building Packet\n");
 
-    slen = len + sizeof(struct spphdr);
+    slen = sizeof(struct spphdr) + len;
 
-    skb = sock_alloc_send_skb(sk, slen, msg->msg_flags&MSG_DONTWAIT, &rc);
-    if(skb == NULL)
-	goto out;
+    printk(KERN_INFO "SPP: sendmsg: %p: Size needed %d, device %s\n",sk,slen,spp->device->name);
 
-    skb_reserve(skb, slen - len);
+    skb = sock_alloc_send_skb(sk, slen, (msg->flags & MSG_DONTWAIT), &rc);
+    if(!skb)
+        goto out;
 
-    printk(KERN_INFO "SPP: sendmsg: adding user data into the equation.\n");
+    skb->sk = sk;
+    skb_reserve(skb, sizeof(struct spphdr));
+    skb_reserve(skb, spp->device->hard_header_len);
 
-    if(memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len)){
-	rc = -EFAULT;
-	kfree_skb(skb);
-	goto out;
-    }
+    printk(KERN_INFO "SPP: sendmsg: %p: Begin Packet Building.\n",sk);
 
-    printk(KERN_INFO "SPP: sendmsg: transmitting buffer\n");
-
-    /* Handle packets in a sequence here */
-    /* determine this if the data length is greater than 1k */
-
-    skb_push(skb, sizeof(struct spphdr));
-    skb_reset_network_header(skb);
-    hdr = spp_hdr(skb);
-    hdr->pvn = 0;
-    hdr->pt = 0; /*TODO: configure this to actually be able to swithc between TM and TC */
-    hdr->shf = 0; /* TODO: one day we will support secondary headers */
+    hdr = (struct spphdr *)skb_put(skb, sizeof(struct spphdr));
+    hdr->pvn = 0; /* Standard is for this to always be 0 */
+    hdr->pt = 0; /*TODO: enable switching between TM and TC packets */
+    hdr->shf = 0; /* TODO: support secondary headers */
     hdr->apid = daddr.sspp_addr.spp_apid;
-    hdr->seqflgs = 3; /* This is unsegmented data, therefore it is 11b or 3 in dec */
-    hdr->psc = 0; /* This is unsegmented data, so we will always be the first packet in the count */
-    hdr->pdl = len - 1;
-    printk(KERN_INFO "SPP: sendmsg: built header of %d bytes\n", sizeof(struct spphdr));
-    /* Note: this should always be the same number, 6 bytes */
+    printk(KERN_INFO "SPP: sendmsg: %p: Destination APID is: %d\n", hdr->apid);
+    hdr->seqflgs = 3; /* We are unsegmented data */.
+    hdr->psc = 0; /* We are unsegmented, therefore we are always the first packet */
+    hdr->pdl = len; /* Just the length of the actual user data */
 
-/*    skb->priority = sk->sk_priority;
-    skb->mark = sk->sk_mark; */
-
+    rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
+    if(rc){
+        kfree_skb(skb);
+        rc = -EFAULT;
+        goto out;
+    }
+        
     spp_queue_xmit(skb, spp->device);
 
     rc = len;
