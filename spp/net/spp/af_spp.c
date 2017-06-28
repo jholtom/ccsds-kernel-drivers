@@ -471,7 +471,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 
     printk(KERN_INFO "SPP: sendmsg: %p: Size needed %d, device %s\n",sk,slen,spp->device->name);
 
-    skb = sock_alloc_send_skb(sk, slen, (msg->flags & MSG_DONTWAIT), &rc);
+    skb = sock_alloc_send_skb(sk, slen, (msg->msg_flags & MSG_DONTWAIT), &rc);
     if(!skb)
         goto out;
 
@@ -497,7 +497,6 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         rc = -EFAULT;
         goto out;
     }
-        
     spp_queue_xmit(skb, spp->device);
 
     rc = len;
