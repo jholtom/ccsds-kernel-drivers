@@ -62,13 +62,12 @@ spp_address spp_addr; /* Current address of the local entity */
 static const struct proto_ops spp_proto_ops; /* Forward define the protocol ops */
 
 struct sock *spp_get_socket(spp_address *dest_addr, int type){
-    struct sock *sk = NULL;
+    struct sock *s = NULL;
     struct hlist_node *node;
     spin_lock(&spp_list_lock);
-    spp_for_each(s, node, &spp_list){
-        if(s->sk && sppcmp(&s->d_addr, dest_addr) && s->sk->sk_type == type){
-            sk = s->sk;
-            sock_hold(sk);
+    sk_for_each(s, node, &spp_list){
+        if(sppcmp(spp_sk(s)->d_addr, dest_addr) && spp_sk(s)->sk->sk_type == type){
+            sock_hold(s);
             break;
         }
     }
@@ -525,7 +524,7 @@ out:
 static int spp_recvmsg(struct socket *sock, struct msghdr *msg, size_t size, int flags)
 {
     struct sock *sk = sock->sk;
-    unsigned int ulen, copied;
+    unsigned int ulen, copied, offset;
     int rc = 0;
     struct sk_buff *skb;
     struct spphdr *hdr;
