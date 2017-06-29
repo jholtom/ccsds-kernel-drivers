@@ -538,14 +538,14 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         goto out;
 
     copied = skb->len;
-    printk(KERN_INFO "SPP: spp_recvmsg: Kernel believes it should be of length: %d\n", copied);
+    offset = sizeof(struct spphdr);
+    copied -= offset;
     if( copied > size){
         copied = size;
-        printk(KERN_INFO "SPP: spp_recvmsg: Truncating message :(\n");
+        printk(KERN_INFO "SPP: spp_recvmsg: Truncating message.\n");
         msg->msg_flags |= MSG_TRUNC;
     }
-    printk(KERN_INFO "SPP: spp_recvmsg: Message data buffer is of size: %d\n", copied);
-    skb_copy_datagram_iovec(skb, 0, msg->msg_iov, copied);
+    skb_copy_datagram_iovec(skb, offset, msg->msg_iov, copied);
     if(msg->msg_namelen != 0){
         struct sockaddr_spp *addr = (struct sockaddr_spp *)msg->msg_name;
         spp_address src;
