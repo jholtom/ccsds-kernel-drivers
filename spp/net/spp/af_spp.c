@@ -66,8 +66,9 @@ struct sock *spp_get_socket(spp_address *dest_addr, int type){
     struct hlist_node *node;
     spin_lock(&spp_list_lock);
     sk_for_each(s, node, &spp_list){
-        printk(KERN_INFO "SPP: spp_get_socket: Socket Dest Addr is: %d\n",spp_sk(s)->d_addr.spp_apid);
+        printk(KERN_INFO "SPP: spp_get_socket: Looking for Dest Addr: %d\n",dest_addr->spp_apid);
         if(sppcmp(&(spp_sk(s)->d_addr), dest_addr) && s->sk_type == type){
+            printk(KERN_INFO "SPP: spp_get_socket: Socket Dest Addr is: %d\n",spp_sk(s)->d_addr.spp_apid);
             printk(KERN_INFO "SPP: spp_get_socket: We picked a socket!\n");
             sock_hold(s);
             break;
