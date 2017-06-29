@@ -523,7 +523,6 @@ out:
  */
 static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg, size_t size, int flags)
 {
-    printk(KERN_INFO "SPP: spp_recvmsg: Entered.\n");
     struct sock *sk = sock->sk;
     unsigned int ulen, copied, offset;
     int rc = 0;
@@ -543,10 +542,8 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         copied = size;
         msg->msg_flags |= MSG_TRUNC;
     }
-    offset = sizeof(struct spphdr);
-    copied -= offset;
     printk(KERN_INFO "SPP: spp_recvmsg: Message data buffer is of size: %d\n", copied);
-    skb_copy_datagram_iovec(skb, offset, msg->msg_iov, copied);
+    skb_copy_datagram_iovec(skb, 0, msg->msg_iov, copied);
     if(msg->msg_namelen != 0){
         struct sockaddr_spp *addr = (struct sockaddr_spp *)msg->msg_name;
         spp_address src;
