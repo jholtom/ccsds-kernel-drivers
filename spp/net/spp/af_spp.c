@@ -65,12 +65,8 @@ struct sock *spp_get_socket(spp_address *dest_addr, int type){
     struct sock *s = NULL;
     struct hlist_node *node;
     spin_lock(&spp_list_lock);
-    printk("SPP: spp_get_socket: Socket type should be: %d, Requested socket type is: %d\n", SOCK_DGRAM, type);
     sk_for_each(s, node, &spp_list){
-        printk(KERN_INFO "SPP: spp_get_socket: Looking for Dest Addr: %d\n",dest_addr->spp_apid);
-        printk(KERN_INFO "SPP: spp_get_socket: Socket Dest Addr is: %d\n",spp_sk(s)->s_addr.spp_apid);
         if(sppcmp(&(spp_sk(s)->s_addr), dest_addr) && s->sk_type == type){
-            printk(KERN_INFO "SPP: spp_get_socket: We picked a socket!\n");
             sock_hold(s);
             break;
         }
@@ -527,6 +523,7 @@ out:
  */
 static int spp_recvmsg(struct socket *sock, struct msghdr *msg, size_t size, int flags)
 {
+    printk(KERN_INFO "SPP: spp_recvmsg: Entered.\n");
     struct sock *sk = sock->sk;
     unsigned int ulen, copied, offset;
     int rc = 0;
