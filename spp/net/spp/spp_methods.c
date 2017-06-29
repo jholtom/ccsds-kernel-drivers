@@ -60,6 +60,7 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
     int type;
     int seqflags;
     int origlen;
+    unsigned int hdrfields = 0;
     struct spphdr *hdr;
     int rc = 0;
 
@@ -74,23 +75,28 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
     /* TODO: Parse the header */
     printk(KERN_INFO "SPP: spp_rcv: Parsing Header\n");
     hdr = (struct spphdr *)skb->data; /* TODO: make this a little safer */
-    hdr->fields = ntohl(hdr->fields);
-    type = ((hdr->fields & 0x10000000) >> 28);
-    dest.spp_apid =  ((hdr->fields & 0x07FF0000) >> 16);
-    seqflags = ((hdr->fields & 0x00C000) >> 14);
+    hdrfields = ntohl(hdr->fields);
+    type = ((hdrfields & 0x10000000) >> 28);
+    dest.spp_apid =  ((hdrfields & 0x07FF0000) >> 16);
+    seqflags = ((hdrfields & 0x00C000) >> 14);
     printk(KERN_INFO "SPP: spp_rcv: Destination Address is %d\n", dest.spp_apid);
+    printk(KERN_INFO "SPP: spp_rcv: Sequence Flags are: %d\n", seqflags);
     /* We are an unsegmented frame for now
      * TODO: implement frame segmentation
      */
     if(1){
         sk = spp_get_socket(&dest, SOCK_DGRAM); /*TODO: add support to find the correct version with the type flag as well */
         if(sk != NULL){
-        bh_lock_sock(sk);
+            printk(KERN_INFO "SPP: spp_rcv: We got back a valid socket!\n");
+            bh_lock_sock(sk);
             if(atomic_read(&sk->sk_rmem_alloc) >= sk->sk_rcvbuf){
+                printk(KERN_INFO "SPP: spp_rcv: Too big to fit in buffer, bailing out\n");
                 kfree_skb(skb);
             } else {
-                if(sock_queue_rcv_skb(sk,skb) != 0)
+                if(sock_queue_rcv_skb(sk,skb) != 0){
+                    printk(KERN_INFO "SPP: spp_rcv: Sent off to sock_queue_rcv_skb! Freeing...\n");
                     kfree(skb);
+                }
             }
         } else {
             kfree_skb(skb);
