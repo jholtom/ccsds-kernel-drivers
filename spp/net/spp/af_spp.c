@@ -521,7 +521,7 @@ out:
  * Socket Receive Message
  * TODO: Complete method with correct implementation
  */
-static int spp_recvmsg(struct socket *sock, struct msghdr *msg, size_t size, int flags)
+static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg, size_t size, int flags)
 {
     printk(KERN_INFO "SPP: spp_recvmsg: Entered.\n");
     struct sock *sk = sock->sk;
