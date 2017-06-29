@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <netspp/spp.h>
 
+#define BUFSIZE 23
+
 int main() {
     int fd;
     struct sockaddr_spp myaddr;
@@ -29,15 +31,9 @@ int main() {
         perror("bind failed");
         return -2;
     }
-
-    char *my_message = "this is a test message";
-    if (sendto(fd, my_message, 1+ strlen(my_message), 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-        perror("sendto failed");
-        return -3;
-    }
-  //  int rc;
-  //  unsigned char recvdata[BUFSIZE];
-  //  rc = recvfrom(fd, recvdata, BUFSIZE, (struct sockaddr *)&servaddr, sizeof(servaddr));
-    /* could also use recv() but you need to connect() first */
-        return 0; /* Somehow this thing works */
+    int rc;
+    unsigned char recvdata[BUFSIZE];
+    rc = recvfrom(fd, recvdata, BUFSIZE, (struct sockaddr *)&servaddr, sizeof(servaddr));
+    printf("Received: %s\n", recvdata);
+    return rc;
 }
