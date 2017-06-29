@@ -66,13 +66,13 @@ struct sock *spp_get_socket(spp_address *dest_addr, int type){
     struct hlist_node *node;
     spin_lock(&spp_list_lock);
     sk_for_each(s, node, &spp_list){
-        if(sppcmp(spp_sk(s)->d_addr, dest_addr) && spp_sk(s)->sk->sk_type == type){
+        if(sppcmp(&(spp_sk(s)->d_addr), dest_addr) && s->sk_type == type){
             sock_hold(s);
             break;
         }
     }
     spin_unlock(&spp_list_lock);
-    return sk;
+    return s;
 }
 
 /*
