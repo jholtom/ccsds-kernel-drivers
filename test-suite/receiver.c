@@ -14,12 +14,12 @@ int main() {
 
     memset((char *)&myaddr, 0, sizeof(myaddr));
     myaddr.sspp_family = AF_SPP;
-    spp_address spp_myaddr = { 2001 };
+    spp_address spp_myaddr = { 2002 };
     myaddr.sspp_addr = spp_myaddr;
 
     memset((char *)&servaddr, 0, sizeof(servaddr));
     servaddr.sspp_family = AF_SPP;
-    spp_address spp_servaddr = { 2002 };
+    spp_address spp_servaddr = { 2001 };
     servaddr.sspp_addr = spp_servaddr;
 
     if ((fd = socket(AF_SPP, SOCK_DGRAM, 0)) < 0) {
