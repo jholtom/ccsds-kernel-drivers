@@ -89,11 +89,15 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
         if(sk != NULL){
             printk(KERN_INFO "SPP: spp_rcv: We got back a valid socket!\n");
             bh_lock_sock(sk);
+            printk(KERN_INFO "SPP: spp_rcv: Locked the socket\n");
             if(atomic_read(&sk->sk_rmem_alloc) >= sk->sk_rcvbuf){
                 printk(KERN_INFO "SPP: spp_rcv: Too big to fit in buffer, bailing out\n");
                 kfree_skb(skb);
             } else {
-                if(sock_queue_rcv_skb(sk,skb) != 0){
+                int err;
+                err = sock_queue_rcv_skb(sk,skb);
+                printk(KERN_INFO "SPP: spp_rcv: sock_queue_rcv_skb returned: %d\n",err);
+                if(err != 0){
                     printk(KERN_INFO "SPP: spp_rcv: Sent off to sock_queue_rcv_skb! Freeing...\n");
                     kfree(skb);
                 }
@@ -101,6 +105,7 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
         } else {
             kfree_skb(skb);
         }
+        printk(KERN_INFO "SPP: spp_rcv: About to exit the function...\n");
         bh_unlock_sock(sk);
         sock_put(sk);
     }
