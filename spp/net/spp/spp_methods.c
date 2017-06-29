@@ -55,12 +55,13 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
 {
     spp_address *dev_addr = (spp_address *)dev->dev_addr;
     spp_address dest = { 0 };
-    struct sock *sock;
+    struct sock *sk;
     struct spp_dev *sppdev;
     int type;
     int seqflags;
     int origlen;
     struct spphdr *hdr;
+    int rc = 0;
 
     printk("SPP: spp_rcv: got packet in over SLIP.");
     skb_orphan(skb); /* Orphan it from everyone else, so its ours now, muahaha */
