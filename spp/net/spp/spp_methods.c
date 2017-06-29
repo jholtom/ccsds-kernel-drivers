@@ -53,6 +53,49 @@ void spp_disconnect(struct sock *sk, int reason, unsigned char cause, unsigned c
 
 int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev)
 {
+    spp_address *dev_addr = (spp_address *)dev->dev_addr;
+    spp_address dest = { 0 };
+    struct sock *sock;
+    struct spp_dev *sppdev;
+    int type;
+    int seqflags;
+    int origlen;
+    struct spphdr *hdr;
+
     printk("SPP: spp_rcv: got packet in over SLIP.");
-    return 0;
+    skb_orphan(skb); /* Orphan it from everyone else, so its ours now, muahaha */
+
+    if(!net_eq(dev_net(dev), &init_net)){
+        kfree_skb(skb);
+        printk("SPP: spp_rcv: SPP device and the device that gave us the packet we're not the same...I died\n");
+        return 0;
+    }
+    /* TODO: Parse the header */
+    printk(KERN_INFO "SPP: spp_rcv: Parsing Header\n");
+    hdr = (struct spphdr *)skb->data; /* TODO: make this a little safer */
+    type = ((hdr->fields & 0x10000000) >> 28);
+    dest.spp_apid =  ((hdr->fields & 0x07FF0000) >> 16);
+    seqflags = ((hdr->fields & 0x00C000) >> 14);
+    printk(KERN_INFO "SPP: spp_rcv: Destination Address is %d\n", dest.spp_apid);
+    /* We are an unsegmented frame for now
+     * TODO: implement frame segmentation
+     */
+    if(1){
+        sk = spp_get_socket(&dest, SOCK_DGRAM); /*TODO: add support to find the correct version with the type flag as well */
+        if(sk != NULL){
+        bh_lock_sock(sk);
+            if(atomic_read(&sk->sk_rmem_alloc) >= sk->sk_rcvbuf){
+                kfree_skb(skb);
+            } else {
+                if(sock_queue_rcv_skb(sk,skb) != 0)
+                    kfree(skb);
+            }
+        } else {
+            kfree_skb(skb);
+        }
+        bh_unlock_sock(sk);
+        sock_put(sk);
+    }
+out:
+    return rc;
 }

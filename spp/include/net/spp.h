@@ -109,6 +109,11 @@ static __inline__ struct spp_dev *__spp_dev_get_rtnl(const struct net_device *de
     return (struct spp_dev*)dev->spp_ptr;
 }
 
+extern struct sock *spp_get_socket(spp_address *dest_addr, int type);
+
+#define spp_for_each(__spp, node, list) \
+        hlist_for_each_entry(__spp, node, list, spp_node)
+
 /* spp_addr.c */
 extern void spp2ascii(char *buf, const spp_address *addr);
 extern void asii2spp(spp_address *addr, const char *buf);
