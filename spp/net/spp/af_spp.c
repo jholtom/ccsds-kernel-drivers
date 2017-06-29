@@ -538,8 +538,10 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         goto out;
 
     copied = skb->len;
+    printk(KERN_INFO "SPP: spp_recvmsg: Kernel believes it should be of length: %d\n", copied);
     if( copied > size){
         copied = size;
+        printk(KERN_INFO "SPP: spp_recvmsg: Truncating message :(\n");
         msg->msg_flags |= MSG_TRUNC;
     }
     printk(KERN_INFO "SPP: spp_recvmsg: Message data buffer is of size: %d\n", copied);
