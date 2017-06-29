@@ -5,7 +5,10 @@ CFLAGS		:= -Os -mcpu=cortex-m3 -mthumb -I/home/ecestudent/linux-cortexm-1.14.3/A
 LDFLAGS		:= -mcpu=cortex-m3 -mthumb
 CC		= $(CROSS_COMPILE_APPS)gcc
 
-main: main.o
+sender: sender.o
+	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+
+receiver: receiver.o
 	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 
 clean:

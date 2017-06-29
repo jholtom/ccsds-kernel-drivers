@@ -33,7 +33,7 @@ int main() {
     }
     int rc;
     unsigned char recvdata[BUFSIZE];
-    rc = recvfrom(fd, recvdata, BUFSIZE, (struct sockaddr *)&servaddr, sizeof(servaddr));
+    rc = recvfrom(fd, recvdata, BUFSIZE, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
     printf("Received: %s\n", recvdata);
     return rc;
 }
