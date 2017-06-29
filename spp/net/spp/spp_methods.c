@@ -74,6 +74,7 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
     /* TODO: Parse the header */
     printk(KERN_INFO "SPP: spp_rcv: Parsing Header\n");
     hdr = (struct spphdr *)skb->data; /* TODO: make this a little safer */
+    hdr->fields = ntohl(hdr->fields);
     type = ((hdr->fields & 0x10000000) >> 28);
     dest.spp_apid =  ((hdr->fields & 0x07FF0000) >> 16);
     seqflags = ((hdr->fields & 0x00C000) >> 14);
