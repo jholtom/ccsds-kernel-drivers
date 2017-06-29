@@ -63,49 +63,39 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
     unsigned int hdrfields = 0;
     struct spphdr *hdr;
     int rc = 0;
-
-    printk("SPP: spp_rcv: got packet in over SLIP.");
     skb_orphan(skb); /* Orphan it from everyone else, so its ours now, muahaha */
-
     if(!net_eq(dev_net(dev), &init_net)){
         kfree_skb(skb);
         printk("SPP: spp_rcv: SPP device and the device that gave us the packet we're not the same...I died\n");
         return 0;
     }
     /* TODO: Parse the header */
-    printk(KERN_INFO "SPP: spp_rcv: Parsing Header\n");
     hdr = (struct spphdr *)skb->data; /* TODO: make this a little safer */
     hdrfields = ntohl(hdr->fields);
     type = ((hdrfields & 0x10000000) >> 28);
     dest.spp_apid =  ((hdrfields & 0x07FF0000) >> 16);
     seqflags = ((hdrfields & 0x00C000) >> 14);
-    printk(KERN_INFO "SPP: spp_rcv: Destination Address is %d\n", dest.spp_apid);
-    printk(KERN_INFO "SPP: spp_rcv: Sequence Flags are: %d\n", seqflags);
     /* We are an unsegmented frame for now
      * TODO: implement frame segmentation
      */
     if(1){
         sk = spp_get_socket(&dest, SOCK_DGRAM); /*TODO: add support to find the correct version with the type flag as well */
         if(sk != NULL){
-            printk(KERN_INFO "SPP: spp_rcv: We got back a valid socket!\n");
             bh_lock_sock(sk);
-            printk(KERN_INFO "SPP: spp_rcv: Locked the socket\n");
             if(atomic_read(&sk->sk_rmem_alloc) >= sk->sk_rcvbuf){
                 printk(KERN_INFO "SPP: spp_rcv: Too big to fit in buffer, bailing out\n");
                 kfree_skb(skb);
             } else {
                 int err;
                 err = sock_queue_rcv_skb(sk,skb);
-                printk(KERN_INFO "SPP: spp_rcv: sock_queue_rcv_skb returned: %d\n",err);
                 if(err != 0){
-                    printk(KERN_INFO "SPP: spp_rcv: Sent off to sock_queue_rcv_skb! Freeing...\n");
+                    printk(KERN_INFO "SPP: spp_rcv: Failed to send it off, freeing.\n");
                     kfree(skb);
                 }
             }
         } else {
             kfree_skb(skb);
         }
-        printk(KERN_INFO "SPP: spp_rcv: About to exit the function...\n");
         bh_unlock_sock(sk);
         sock_put(sk);
     }

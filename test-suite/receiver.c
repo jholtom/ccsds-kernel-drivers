@@ -19,7 +19,7 @@ int main() {
 
     memset((char *)&servaddr, 0, sizeof(servaddr));
     servaddr.sspp_family = AF_SPP;
-    spp_address spp_servaddr = { 2001 };
+    spp_address spp_servaddr = { 2002 };
     servaddr.sspp_addr = spp_servaddr;
 
     if ((fd = socket(AF_SPP, SOCK_DGRAM, 0)) < 0) {
