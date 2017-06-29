@@ -550,6 +550,7 @@ static int spp_recvmsg(struct socket *sock, struct msghdr *msg, size_t size, int
         spp_address src;
         addr->sspp_family = AF_SPP;
         hdr = (struct spphdr *)skb->data; /* TODO: make this a little safer */
+        hdr->fields = ntohl(hdr->fields);
         addr->sspp_addr.spp_apid = ((hdr->fields & 0x07FF0000) >> 16);
         msg->msg_namelen = sizeof(struct sockaddr_spp);
     }
