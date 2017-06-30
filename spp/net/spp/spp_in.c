@@ -26,18 +26,8 @@
 #include <net/tcp_states.h>
 #include <net/spp.h>
 
-int spp_process_rx(struct sock *sk, struct sk_buff *skb)
-{
-    /* TODO: complete implemnetation */
-    return 0;
-}
-
 int spp_backlog_rcv(struct sock *sk, struct sk_buff *skb)
 {
-    int queued = spp_process_rx(sk,skb);
-
-    if(!queued)
-        kfree_skb(skb);
-
-    return 0;
+    printk(KERN_INFO "SPP: spp_backlog_rcv: We do not support backlogging. Exiting...\n");
+    return -ESOCKTNOSUPPORT;
 }

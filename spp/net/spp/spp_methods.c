@@ -69,15 +69,13 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
         printk("SPP: spp_rcv: SPP device and the device that gave us the packet we're not the same...I died\n");
         return 0;
     }
-    /* TODO: Parse the header */
-    hdr = (struct spphdr *)skb->data; /* TODO: make this a little safer */
+    hdr = (struct spphdr *)skb->data;
     hdrfields = ntohl(hdr->fields);
     type = ((hdrfields & 0x10000000) >> 28);
     dest.spp_apid =  ((hdrfields & 0x07FF0000) >> 16);
     seqflags = ((hdrfields & 0x00C000) >> 14);
     /* We are an unsegmented frame for now
-     * TODO: implement frame segmentation
-     */
+     * TODO: implement frame segmentation */
     if(1){
         sk = spp_get_socket(&dest, SOCK_DGRAM); /*TODO: add support to find the correct version with the type flag as well */
         if(sk != NULL){

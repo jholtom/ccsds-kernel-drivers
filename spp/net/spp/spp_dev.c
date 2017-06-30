@@ -168,8 +168,6 @@ int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
     }
     ifa->ifa_next = *ifap;
     *ifap = ifa;
-    /*TODO: either implement support for newaddr notifs, or ermove
-     * rtmsg_ifa(RTM_NEWADDR, ifa, nlh, pid);*/
     blocking_notifier_call_chain(&sppaddr_chain, NETDEV_UP, ifa);
     return 0;
 }

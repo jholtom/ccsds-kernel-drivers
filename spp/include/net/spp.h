@@ -85,6 +85,9 @@ static inline __be16 spp_type_trans(struct sk_buff *skb, struct net_device *dev)
 
 /* af_spp.c */
 extern int sysctl_spp_idle_timer;
+extern int sysctl_spp_encrypt;
+extern char sysctl_spp_encryptionkey[16];
+
 
 static inline struct spp_dev *__spp_dev_get_rcu(const struct net_device *dev)
 {
@@ -145,7 +148,6 @@ extern void spp_disconnect(struct sock *sk, int reason, unsigned char cause, uns
 extern int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev);
 
 /* spp_in.c */
-extern int spp_process_rx(struct sock *, struct sk_buff *);
 extern int spp_backlog_rcv(struct sock *, struct sk_buff *);
 
 /* spp_out.c */

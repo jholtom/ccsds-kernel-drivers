@@ -37,6 +37,20 @@ static struct ctl_table spp_table[] = {
         .extra1 = &min_timer,
         .extra2 = &max_timer,
     },
+    {
+        .procname = "encryption",
+        .data = &sysctl_spp_encrypt,
+        .maxlen = sizeof(int),
+        .mode = 0644,
+        .proc_handler = proc_dointvec,
+    },
+    {
+        .procname = "encryption_key",
+        .data = &sysctl_spp_encryptionkey
+        .maxlen = 16,
+        .mode = 0644,
+        .proc_handler = proc_dostring,
+    },
     { }
 };
 

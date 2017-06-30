@@ -52,7 +52,8 @@
 #include <net/spp.h>
 
 int sysctl_spp_idle_timer = SPP_DEFAULT_IDLE;
-
+int sysctl_spp_encrypt = 0;
+char sysctl_spp_encryptionkey[16] = "loremipsumdolor";
 /* This list is a list of sockets */
 HLIST_HEAD(spp_list);
 DEFINE_SPINLOCK(spp_list_lock); /* Create a spin lock for the list */
@@ -499,9 +500,9 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->fields = (hdr->fields << 1) | (shf ? 0x00000001 : 0x00000000);
     hdr->fields = (hdr->fields << 11) | daddr.sspp_addr.spp_apid;
     hdr->fields = (hdr->fields << 2) | 0x00000003; /* We are unsegmented data */
-    hdr->fields = (hdr->fields << 14) | 0x000000FF; /* We are unsegmented data, always the first packet */
+    hdr->fields = (hdr->fields << 14) | 0x000000FF;
     hdr->fields = htonl(hdr->fields);
-    hdr->pdl = htons(len - 1); /* Just the length of the actual user data */
+    hdr->pdl = htons(len - 1); /* Subtract 1 from length as per spec */
 
     rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
     if(rc){
@@ -529,6 +530,7 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     struct sk_buff *skb;
     struct spphdr *hdr;
     unsigned int hdrfields;
+    __be16 pdl;
 
     lock_sock(sk);
 
@@ -550,9 +552,11 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         struct sockaddr_spp *addr = (struct sockaddr_spp *)msg->msg_name;
         spp_address src;
         addr->sspp_family = AF_SPP;
-        hdr = (struct spphdr *)skb->data; /* TODO: make this a little safer */
+        hdr = (struct spphdr *)skb->data;
         hdrfields = ntohl(hdr->fields);
         addr->sspp_addr.spp_apid = ((hdrfields & 0x07FF0000) >> 16);
+        pdl = ntohs(hdr->pdl) + 1; /* Restore the full length by adding that 1 back */
+        /* TODO: Add check of the Packet Data Length for validity */
         msg->msg_namelen = sizeof(struct sockaddr_spp);
     }
     skb_free_datagram(sk,skb);
