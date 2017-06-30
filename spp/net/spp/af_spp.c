@@ -499,9 +499,9 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->fields = (hdr->fields << 1) | (shf ? 0x00000001 : 0x00000000);
     hdr->fields = (hdr->fields << 11) | daddr.sspp_addr.spp_apid;
     hdr->fields = (hdr->fields << 2) | 0x00000003; /* We are unsegmented data */
-    hdr->fields = (hdr->fields << 14) | 0x00000000; /* We are unsegmented data, always the first packet */
+    hdr->fields = (hdr->fields << 14) | 0x000000FF; /* We are unsegmented data, always the first packet */
     hdr->fields = htonl(hdr->fields);
-    hdr->pdl = htons(len); /* Just the length of the actual user data */
+    hdr->pdl = htons(len - 1); /* Just the length of the actual user data */
 
     rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
     if(rc){
