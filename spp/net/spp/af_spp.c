@@ -294,7 +294,7 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
     struct spp_sock *spp = spp_sk(sk);
     struct spp_dev *spp_dev = NULL;
     struct sockaddr_spp *addr = (struct sockaddr_spp *)uaddr;
-    int len, i, rc = 0;
+    int rc = 0;
 
     rc = -EINVAL;
     if (addr_len < sizeof(struct sockaddr_spp))
@@ -351,7 +351,7 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
     }
     rc = -ECONNREFUSED;
     if (sk->sk_state == TCP_CLOSE && sock->state == SS_CONNECTING){
-        sock->state == SS_UNCONNECTED;
+        sock->state = SS_UNCONNECTED;
         goto out;
     }
     rc = -EISCONN;
@@ -388,13 +388,12 @@ out:
 /*
  * Accept incoming connection (create socket)
  * TODO: complete implementation
+ * NOTE: This isn't really something that can happen in SPP, since it is a connectionless protocol.
  */
 static int spp_accept(struct socket *sock, struct socket *newsock, int flags)
 {
-    struct sock *sk = sock->sk;
-    struct sock *newsk;
-    struct sk_buff *skb;
     int rc = -EINVAL;
+    return rc;
 }
 
 /*
@@ -432,7 +431,6 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
 {
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
-    int free, connected = 0;
     struct sk_buff *skb;
     struct sockaddr_spp *usspp = (struct sockaddr_spp *)msg->msg_name;
     struct sockaddr_spp daddr;
@@ -525,7 +523,7 @@ out:
 static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg, size_t size, int flags)
 {
     struct sock *sk = sock->sk;
-    unsigned int ulen, copied, offset;
+    unsigned int copied, offset;
     int rc = 0;
     struct sk_buff *skb;
     struct spphdr *hdr;
@@ -550,7 +548,6 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     skb_copy_datagram_iovec(skb, offset, msg->msg_iov, copied);
     if(msg->msg_namelen != 0){
         struct sockaddr_spp *addr = (struct sockaddr_spp *)msg->msg_name;
-        spp_address src;
         addr->sspp_family = AF_SPP;
         hdr = (struct spphdr *)skb->data;
         hdrfields = ntohl(hdr->fields);
