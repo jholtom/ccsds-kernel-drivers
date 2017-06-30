@@ -96,7 +96,7 @@ void spp_dev_device_up(struct net_device *dev)
 
     rcu_assign_pointer(dev->spp_ptr, spp_dev);
 out:
-    return spp_dev;
+    return;
 }
 
 static void spp_dev_rcu_put(struct rcu_head *head){
@@ -106,7 +106,7 @@ static void spp_dev_rcu_put(struct rcu_head *head){
 
 void spp_dev_device_down(struct net_device *dev)
 {
-    struct sppifaddr *ifa;
+    struct spp_ifaddr *ifa;
     struct spp_dev *spp_dev,*s;
     spp_dev = dev->spp_ptr;
 
