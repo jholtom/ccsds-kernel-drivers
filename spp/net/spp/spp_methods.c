@@ -53,13 +53,10 @@ void spp_disconnect(struct sock *sk, int reason, unsigned char cause, unsigned c
 
 int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev)
 {
-    spp_address *dev_addr = (spp_address *)dev->dev_addr;
     spp_address dest = { 0 };
     struct sock *sk;
-    struct spp_dev *sppdev;
     int type;
     int seqflags;
-    int origlen;
     unsigned int hdrfields = 0;
     struct spphdr *hdr;
     int rc = 0;
