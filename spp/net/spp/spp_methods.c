@@ -94,6 +94,5 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
         bh_unlock_sock(sk);
         sock_put(sk);
     }
-out:
     return rc;
 }
