@@ -206,8 +206,7 @@ static void __spp_del_ifa(struct spp_dev *spp_dev, struct spp_ifaddr **ifap, int
     struct spp_ifaddr *ifa, *ifa1 = *ifap;
 
     ASSERT_RTNL();
-    struct spp_ifaddr **ifap1 = NULL;
-    **ifap1 = &ifa1->ifa_next;
+    struct spp_ifaddr **ifap1 = &ifa1->ifa_next;
     while((ifa = *ifap1) != NULL){
         *ifap1 = ifa->ifa_next;
         blocking_notifier_call_chain(&sppaddr_chain,NETDEV_DOWN,ifa);
