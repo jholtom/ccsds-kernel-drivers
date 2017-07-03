@@ -80,11 +80,10 @@ static int spp_seq_socket_show(struct seq_file *seq, void *v)
 
     /* 9999 is the undefined APID for printing now - its very not valid and stands out */
 
-    seq_printf(seq, "%d %d %-5s %d %5d %5d %ld\n",
+    seq_printf(seq, "%d %d %-5s %5d %5d %ld\n",
             !spp->d_addr.spp_apid ? 9999 : spp->d_addr.spp_apid,
             !spp->s_addr.spp_apid ? 9999 : spp->s_addr.spp_apid,
             devname,
-            spp->idle_timer / HZ,
             sk_wmem_alloc_get(s),
             sk_rmem_alloc_get(s),
             s->sk_socket ? SOCK_INODE(s->sk_socket)->i_ino : 0L);
