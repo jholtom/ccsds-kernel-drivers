@@ -49,8 +49,4 @@ struct sockaddr_spp {
  * The null address is: 00000000000 (0 dec)
  * The idle address is: 11111111111 (2047 dec)
  */
-
-const spp_address spp_defaddr = {2001};
-const spp_address spp_nulladdr = {0};
-const spp_address spp_idleaddr = {2047};
 #endif

@@ -51,9 +51,16 @@
 #include <net/tcp_states.h>
 #include <net/spp.h>
 
+/* Assorted variables for use */
+
 int sysctl_spp_idle_timer = SPP_DEFAULT_IDLE;
 int sysctl_spp_encrypt = 0;
 char sysctl_spp_encryptionkey[16] = "loremipsumdolor";
+
+const spp_address spp_defaddr = {2001};
+const spp_address spp_nulladdr = {0};
+const spp_address spp_idleaddr = {2047};
+
 /* This list is a list of sockets */
 HLIST_HEAD(spp_list);
 DEFINE_SPINLOCK(spp_list_lock); /* Create a spin lock for the list */
