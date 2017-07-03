@@ -326,7 +326,7 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
     rc = 0;
 
 done:
-    spp_insert_socket(spp);
+    spp_insert_socket(sk);
     sock_reset_flag(sk, SOCK_ZAPPED);
 out_release_sock:
     release_sock(sk);
@@ -369,8 +369,7 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
     if (sock_flag(sk, SOCK_ZAPPED))
         goto out;
 
-    spp_address spp_null = spp_nulladdr;
-    if(!sppcmp(&(spp->s_addr), &spp_null))
+    if(!sppcmp(&(spp->s_addr), &spp_nulladdr))
         /*TODO: set spp->s_addr to null address */
         spp->d_addr = addr->sspp_addr;
 
@@ -572,7 +571,6 @@ out:
 static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 {
     struct sock *sk = sock->sk;
-    struct spp_sock *spp = spp_sk(sk);
     void __user *argp = (void __user *)arg;
     struct ifreq ifr;
     struct sockaddr_spp sin_orig;
@@ -584,7 +582,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     int rc = -EFAULT;
     lock_kernel();
     /* Bring the user request into kernel space */
-    if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
+    if (copy_from_user(&ifr, argp, sizeof(struct ifreq)))
         goto out;
     ifr.ifr_name[IFNAMSIZ - 1] = 0; /* Why? */
 
@@ -704,7 +702,7 @@ out:
     return rc;
 rarok:
     rtnl_unlock();
-    rc = copy_to_user(arg, &ifr, sizeof(struct ifreq)) ? -EFAULT : 0;
+    rc = copy_to_user(argp, &ifr, sizeof(struct ifreq)) ? -EFAULT : 0;
     goto out;
 }
 
