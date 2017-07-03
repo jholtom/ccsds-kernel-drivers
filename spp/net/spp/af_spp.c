@@ -121,10 +121,10 @@ static void spp_insert_socket(struct sock *sk)
     spin_unlock_bh(&spp_list_lock); /* Release socket list lock */
 }
 
-void spp_destroy_socket(struct sock *){
+void spp_destroy_socket(struct sock *sk){
     struct sk_buff *skb;
 
-    spp_remove_socket(sk);
+    spp_remove_sock(sk);
     spp_clear_queues(sk);
 
     while((skb = skb_dequeue(&sk->sk_receive_queue)) != NULL){
