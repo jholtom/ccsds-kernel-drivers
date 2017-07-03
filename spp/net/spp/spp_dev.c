@@ -221,7 +221,7 @@ static void __spp_del_ifa(struct spp_dev *spp_dev, struct spp_ifaddr **ifap, int
         spp_free_ifa(ifa1);
 }
 
-static void spp_del_ifa(struct spp_dev *spp_device, struct spp_ifaddr **ifap, int destroy)
+void spp_del_ifa(struct spp_dev *spp_device, struct spp_ifaddr **ifap, int destroy)
 {
     __spp_del_ifa(spp_device, ifap, destroy, NULL, 0);
 }
