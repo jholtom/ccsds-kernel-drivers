@@ -17,6 +17,10 @@
  *               Jacob Willis <willisj2@byu.edu>
  *
  */
+
+#ifndef _SPP_H
+#define _SPP_H
+
 #include <linux/spp.h>
 #include <linux/spinlock.h>
 #include <linux/timer.h>
@@ -163,4 +167,5 @@ extern void spp_unregister_sysctl(void);
 #else
 static inline void spp_register_sysctl(void){};
 static inline void spp_unregister_sysctl(void){};
+#endif
 #endif

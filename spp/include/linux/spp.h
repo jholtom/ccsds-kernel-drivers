@@ -18,6 +18,9 @@
  *
  */
 
+#ifndef SPP_KERNEL_H
+#define SPP_KERNEL_H
+
 #include <linux/socket.h>
 #include <linux/skbuff.h>
 
@@ -47,6 +50,7 @@ struct sockaddr_spp {
  * The idle address is: 11111111111 (2047 dec)
  */
 
-extern const spp_address spp_defaddr = {2001};
-extern const spp_address spp_nulladdr = {0};
-extern const spp_address spp_idleaddr = {2047};
+const spp_address spp_defaddr = {2001};
+const spp_address spp_nulladdr = {0};
+const spp_address spp_idleaddr = {2047};
+#endif
