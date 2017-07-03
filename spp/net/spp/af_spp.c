@@ -461,7 +461,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     struct sockaddr_spp *usspp = (struct sockaddr_spp *)msg->msg_name;
     struct sockaddr_spp daddr;
     struct spphdr *hdr;
-    int rc,slen;
+    int rc,slen,pkttype,shf;
     int addr_len = msg->msg_namelen;
 
     /* Check that length is not too big */
@@ -516,8 +516,8 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     skb->protocol = spp_type_trans(skb, spp->device);
     skb_reserve(skb, sizeof(struct spphdr));
 
-    int pkttype = 0; /* TODO: allow setting of packet type (TM/TC) */
-    int shf = 0; /* TODO: Enable secondary header support */
+    pkttype = 0; /* TODO: allow setting of packet type (TM/TC) */
+    shf = 0; /* TODO: Enable secondary header support */
     hdr = (struct spphdr *)skb_push(skb, sizeof(struct spphdr));
     hdr->fields = 0;
     hdr->fields = (hdr->fields << 1) | (pkttype ? 0x00000001 : 0x00000000);
