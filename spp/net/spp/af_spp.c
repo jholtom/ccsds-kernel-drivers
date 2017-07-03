@@ -121,14 +121,19 @@ static void spp_insert_socket(struct sock *sk)
     spin_unlock_bh(&spp_list_lock); /* Release socket list lock */
 }
 
-void spp_destroy_socket(struct sock *); /* Forward definition of socket destroy */
+void spp_destroy_socket(struct sock *){
+    struct sk_buff *skb;
 
-/*
- * Handles deferred socket kills on a timer
- */
-static void spp_destroy_timer(unsigned long data)
-{
-    spp_destroy_socket((struct sock *)data); /* Slay the socket */
+    spp_remove_socket(sk);
+    spp_clear_queues(sk);
+
+    while((skb = skb_dequeue(&sk->sk_receive_queue)) != NULL){
+        if(skb->sk != sk){
+            sock_set_flag(skb->sk, SOCK_DEAD);
+        }
+        kfree_skb(skb);
+    }
+    __sock_put(sk);
 }
 
 /*
@@ -288,7 +293,22 @@ TODO: Add other types of NETDEV events just in case */
  */
 static int spp_release(struct socket *sock)
 {
-    /* TODO: Implement socket release */
+    struct sock *sk = sock->sk;
+    struct spp_sock *spp;
+
+    if (sk == NULL)
+        return 0;
+    sock_hold(sk);
+    sock_orphan(sk);
+    lock_sock(sk);
+    spp = spp_sk(sk);
+    sk->sk_state = TCP_CLOSE;
+    sk->sk_shutdown |= SEND_SHUTDOWN;
+    sk->sk_state_change(sk);
+    spp_destroy_socket(spp);
+    sock->sk = NULL;
+    release_sock(sk);
+    sock_put(sk);
     return 0;
 }
 

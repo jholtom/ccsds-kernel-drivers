@@ -148,6 +148,7 @@ extern int spp_del_ifa(struct spp_dev *spp_device, struct spp_ifaddr **ifap, int
 /* spp_loopback.c */
 
 /* spp_methods.c */
+extern void spp_clear_queues(struct sock *sk);
 extern void spp_disconnect(struct sock *sk, int reason, unsigned char cause, unsigned char diagnostic);
 extern int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *ptype, struct net_device *orig_dev);
 
