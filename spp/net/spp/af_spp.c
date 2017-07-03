@@ -305,7 +305,7 @@ static int spp_release(struct socket *sock)
     sk->sk_state = TCP_CLOSE;
     sk->sk_shutdown |= SEND_SHUTDOWN;
     sk->sk_state_change(sk);
-    spp_destroy_socket(spp);
+    spp_destroy_socket(sk);
     sock->sk = NULL;
     release_sock(sk);
     sock_put(sk);
