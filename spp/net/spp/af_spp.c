@@ -170,7 +170,7 @@ out:
  * Handles getting the current options of a socket
  * Handles SPP specific socket options (and possibly socket level options too)
  */
-static int spp_getsockopt(struct socket *sock, int level, int optname, char __user *optval, unsigned int *optlen)
+static int spp_getsockopt(struct socket *sock, int level, int optname, char __user *optval, int __user *optlen)
 {
     struct sock *sk = sock->sk;
     int val, len, rc = -ENOPROTOOPT;
