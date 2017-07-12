@@ -67,6 +67,7 @@ static void spp_rcu_free_ifa(struct rcu_head *head)
     struct spp_ifaddr *ifa = container_of(head, struct spp_ifaddr, rcu_head);
     if(ifa->spp_dev)
        spp_dev_put(ifa->spp_dev);
+    printk(KERN_INFO "SPP: spp_rcu_free_ifa: Freeing Interface Address NOW!\n");
     kfree(ifa);
 }
 
@@ -150,7 +151,8 @@ int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
         spp_free_ifa(ifa);
         return 0;
     }
-
+    printk(KERN_INFO "SPP: spp_insert_ifa: Adding new interface address now\n");
+    /* TODO: Verify all this logic and secondary handling...I'm pretty sure its not valid */
     ifa->ifa_flags &= ~IFA_F_SECONDARY;
     last_primary = &spp_device->ifa_list;
     for(ifap = &spp_device->ifa_list; (ifa1 = *ifap) != NULL; ifap = &ifa1->ifa_next){

@@ -516,7 +516,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     skb->protocol = spp_type_trans(skb, spp->device);
     skb_reserve(skb, sizeof(struct spphdr));
 
-    pkttype = 0; /* TODO: allow setting of packet type (TM/TC) */
+    pkttype = 0; /* TODO: allow setting of packet type (TM/TC), I think this should be a socket option */
     shf = 0; /* TODO: Enable secondary header support */
     hdr = (struct spphdr *)skb_push(skb, sizeof(struct spphdr));
     hdr->fields = 0;

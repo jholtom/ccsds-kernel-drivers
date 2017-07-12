@@ -63,7 +63,7 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
     skb_orphan(skb); /* Orphan it from everyone else, so its ours now, muahaha */
     if(!net_eq(dev_net(dev), &init_net)){
         kfree_skb(skb);
-        printk("SPP: spp_rcv: SPP device and the device that gave us the packet we're not the same...I died\n");
+        printk(KERN_INFO "SPP: spp_rcv: SPP device and the device that gave us the packet we're not the same...I died\n");
         return 0;
     }
     hdr = (struct spphdr *)skb->data;
@@ -74,8 +74,10 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
     /* We are an unsegmented frame for now
      * TODO: implement frame segmentation */
     if(1){
+        printk(KERN+INFO "SPP:spp_rcv: Looking for socket with APID: %d\n",dest.spp_apid);
         sk = spp_get_socket(&dest, SOCK_DGRAM); /*TODO: add support to find the correct version with the type flag as well */
         if(sk != NULL){
+            printk(KERN_INFO "SPP: spp_rcv: Got socket with APID: %d\n", spp_sock(sk)->s_addr.spp_apid);
             bh_lock_sock(sk);
             if(atomic_read(&sk->sk_rmem_alloc) >= sk->sk_rcvbuf){
                 printk(KERN_INFO "SPP: spp_rcv: Too big to fit in buffer, bailing out\n");
