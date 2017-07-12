@@ -76,11 +76,11 @@ struct sock *spp_get_socket(spp_address *dest_addr, int type){
     sk_for_each(s, node, &spp_list){
         if(sppcmp(&(spp_sk(s)->s_addr), dest_addr) && s->sk_type == type){
             sock_hold(s);
-            break;
+            return s;
         }
     }
     spin_unlock(&spp_list_lock);
-    return s;
+    return NULL;
 }
 
 /*
