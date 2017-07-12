@@ -77,7 +77,7 @@ int spp_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pty
         printk(KERN_INFO "SPP:spp_rcv: Looking for socket with APID: %d\n",dest.spp_apid);
         sk = spp_get_socket(&dest, SOCK_DGRAM); /*TODO: add support to find the correct version with the type flag as well */
         if(sk != NULL){
-            printk(KERN_INFO "SPP: spp_rcv: Got socket with APID: %d\n", spp_sock(sk)->s_addr.spp_apid);
+            printk(KERN_INFO "SPP: spp_rcv: Got socket with APID: %d\n", spp_sk(sk)->s_addr.spp_apid);
             bh_lock_sock(sk);
             if(atomic_read(&sk->sk_rmem_alloc) >= sk->sk_rcvbuf){
                 printk(KERN_INFO "SPP: spp_rcv: Too big to fit in buffer, bailing out\n");
