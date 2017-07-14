@@ -51,7 +51,7 @@ struct spp_sock {
     struct sk_buff_head interrupt_out_queue;
     unsigned long idle_timer;
     struct timer_list timer;
-    int type, secondary_header;
+    int pkttype, secondary_header;
 };
 
 static inline struct spp_sock *spp_sk(const struct sock *sk)
