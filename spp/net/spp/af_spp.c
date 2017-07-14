@@ -326,7 +326,6 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
     rc = -EINVAL;
     if (addr_len < sizeof(struct sockaddr_spp))
         goto out;
-    rc = -EADDRNOTAVAIL; /* TODO: add check to make sure address is available */
     rc = -EACCES;
     if(!capable(CAP_NET_BIND_SERVICE)) /*TODO: This only checks to make sure you can bind ports...i.e either has capabilties or is root */
         goto out;
@@ -347,11 +346,13 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
         goto done;
     /* Probably should guard this eventually: TODO */
     spp_dev = spp_addr_sppdev(&addr->sspp_addr);
-
-    spp->device = spp_dev->dev;
-
-    rc = 0;
-
+    if(spp_dev != NULL){
+        spp->device = spp_dev->dev;
+        rc = 0;
+        goto done;
+    }
+    rc = -EADDRNOTAVAIL;
+    goto out_release_sock;
 done:
     spp_insert_socket(sk);
     sock_reset_flag(sk, SOCK_ZAPPED);
