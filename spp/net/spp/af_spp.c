@@ -344,7 +344,7 @@ static int spp_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 
     if(spp->device != NULL)
         goto done;
-    /* Probably should guard this eventually: TODO */
+
     spp_dev = spp_addr_sppdev(&addr->sspp_addr);
     if(spp_dev != NULL){
         spp->device = spp_dev->dev;
@@ -397,14 +397,11 @@ static int spp_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len
     if (sock_flag(sk, SOCK_ZAPPED))
         goto out;
 
-    if(!sppcmp(&(spp->s_addr), &spp_nulladdr))
-        /*TODO: set spp->s_addr to null address */
+    if(!sppcmp(&(spp->s_addr), &spp_nulladdr)){
         spp->d_addr = addr->sspp_addr;
+    }
 
-    sock->state = SS_CONNECTING;
-    sk->sk_state = SS_CONNECTED;/* TODO: in connecting for no time at all, immediately shift to connected? */;
-
-    /* Start timeout... */
+    sk->sk_state = SS_CONNECTED;
     sock->state = SS_CONNECTED;
     rc = 0;
 out:
@@ -414,7 +411,7 @@ out:
 
 /*
  * Accept incoming connection (create socket)
- * TODO: complete implementation
+ * TODO: Figure out correct behavior
  * NOTE: This isn't really something that can happen in SPP, since it is a connectionless protocol.
  */
 static int spp_accept(struct socket *sock, struct socket *newsock, int flags)
