@@ -31,7 +31,8 @@ int main() {
     }
 
     char *my_message = "this is a test message";
-    if (sendto(fd, my_message, 1+ strlen(my_message), 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+    if (sendto(fd, my_message, 1+ strlen(my_message), 0,
+        (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
         perror("sendto failed");
         return -3;
     }
