@@ -659,10 +659,10 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                                break;
                            }
         case SIOCGIFADDR: {
+                              /* TODO: Add multiple return */
                               memset(sin, 0, sizeof(*sin));
                               sin->sspp_family = AF_SPP;
                               sin->sspp_addr.spp_apid = ifa->ifa_local;
-                              printk(KERN_INFO "SPP: IOCTL: Get Interface Address\n");
                               goto rarok;
                           }
         case SIOCSIFADDR: {
