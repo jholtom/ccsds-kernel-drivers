@@ -1,8 +1,8 @@
 # Makefile for sppconfig (first attempt)
 # Author: Jacob Willis
 
-CFLAGS		:= -O0 -g -mcpu=cortex-m3 -mthumb -I/home/ecestudent/linux-cortexm-1.14.3/A2F/root/usr/include/
-OUTPATH := -o ~/linux-cortexm-1.14.3/projects/skeleton/sppconfig.out
+CFLAGS		:= -O0 -g -mcpu=cortex-m3 -mthumb -I$(HOME)/linux-cortexm-1.14.3/A2F/root/usr/include/
+OUTPATH := -o $(HOME)/linux-cortexm-1.14.3/projects/skeleton/sppconfig.out
 LDFLAGS		:= -mcpu=cortex-m3 -mthumb
 CC		= $(CROSS_COMPILE_APPS)gcc
 
