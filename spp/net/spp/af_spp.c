@@ -620,14 +620,14 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 
     if(!dev)
         goto done;
-    spp_device = __spp_dev_get_rtnl(dev);
+/*    spp_device = __spp_dev_get_rtnl(dev);
     if(spp_device){
         for(ifap = &spp_device->ifa_list; (ifa = *ifap) != NULL; ifap = &ifa->ifa_next)
         {
             if(!strcmp(ifr.ifr_name, ifa->ifa_label))
                 break;
         }
-    }
+    }*/
     switch (cmd) {
         case TIOCOUTQ: {
                            int amount = sk->sk_sndbuf - sk_wmem_alloc_get(sk);

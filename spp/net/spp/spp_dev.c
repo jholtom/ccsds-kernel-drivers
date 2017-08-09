@@ -145,7 +145,7 @@ void spp_dev_device_down(struct net_device *dev)
 int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
 {
     struct spp_dev *spp_device = ifa->spp_dev;
-    struct spp_ifaddr *ifa1, **ifap;
+/*    struct spp_ifaddr *ifa1, **ifap;*/
 
     ASSERT_RTNL();
     if(!ifa->ifa_local){
