@@ -152,18 +152,14 @@ int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
         spp_free_ifa(ifa);
         return 0;
     }
-    printk(KERN_INFO "SPP: spp_insert_ifa: Adding new interface address now\n");
 /*    for(ifap = &spp_device->ifa_list; (ifa1 = *ifap) != NULL; ifap = &ifa1->ifa_next){
         if(ifa1->ifa_local == ifa->ifa_local){
             spp_free_ifa(ifa);
             return -EEXIST;
         }
     }*/
-    printk(KERN_INFO "SPP: spp_dev: __spp_insert_ifa: APID of Current List Head: %d", (spp_device->ifa_list)->ifa_local);
     ifa->ifa_next = spp_device->ifa_list;
-    printk(KERN_INFO "SPP: spp_dev: __spp_insert_ifa: APID of Set IFA Next: %d", (ifa->ifa_next)->ifa_local);
     spp_device->ifa_list = ifa;
-    printk(KERN_INFO "SPP: spp_dev: __spp_insert_ifa: APID of New List Head: %d", (spp_device->ifa_list)->ifa_local);
     blocking_notifier_call_chain(&sppaddr_chain, NETDEV_UP, ifa);
     return 0;
 }

@@ -620,7 +620,8 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 
     if(!dev)
         goto done;
-/*    spp_device = __spp_dev_get_rtnl(dev);
+/*  TODO: Fix this so it no longer accidentally modifies spp_device->ifa_list
+ * spp_device = __spp_dev_get_rtnl(dev);
     if(spp_device){
         for(ifap = &spp_device->ifa_list; (ifa = *ifap) != NULL; ifap = &ifa->ifa_next)
         {
