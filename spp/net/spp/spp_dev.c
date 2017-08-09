@@ -158,7 +158,7 @@ int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
             return -EEXIST;
         }
     }
-    ifa->ifa_next = &spp_device->ifa_list;
+    ifa->ifa_next = spp_device->ifa_list;
     spp_device->ifa_list = ifa;
     blocking_notifier_call_chain(&sppaddr_chain, NETDEV_UP, ifa);
     return 0;
