@@ -53,6 +53,7 @@ struct spp_dev *spp_addr_sppdev(spp_address *addr)
     for(spp_dev = spp_dev_list; spp_dev != NULL; spp_dev = spp_dev->next)
     {
         for(s = spp_dev->ifa_list; s != NULL; s = s->ifa_next){
+            printk(KERN_INFO "SPP: spp_dev: spp_addr_sppdev: Looking at Address %d", s->ifa_address);
             if(addr->spp_apid == s->ifa_address){
                 res = spp_dev;
             }
@@ -152,12 +153,12 @@ int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
         return 0;
     }
     printk(KERN_INFO "SPP: spp_insert_ifa: Adding new interface address now\n");
-    for(ifap = &spp_device->ifa_list; (ifa1 = *ifap) != NULL; ifap = &ifa1->ifa_next){
+/*    for(ifap = &spp_device->ifa_list; (ifa1 = *ifap) != NULL; ifap = &ifa1->ifa_next){
         if(ifa1->ifa_local == ifa->ifa_local){
             spp_free_ifa(ifa);
             return -EEXIST;
         }
-    }
+    }*/
     ifa->ifa_next = spp_device->ifa_list;
     spp_device->ifa_list = ifa;
     blocking_notifier_call_chain(&sppaddr_chain, NETDEV_UP, ifa);
