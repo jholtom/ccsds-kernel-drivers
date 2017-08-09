@@ -159,7 +159,7 @@ int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
             return -EEXIST;
         }
     }*/
-    printk(KERN_INFO "SPP: spp_dev: __spp_insert_ifa: APID of Current List Head: %d", (spp->device->ifa_list)->ifa_local);
+    printk(KERN_INFO "SPP: spp_dev: __spp_insert_ifa: APID of Current List Head: %d", (spp_device->ifa_list)->ifa_local);
     ifa->ifa_next = spp_device->ifa_list;
     printk(KERN_INFO "SPP: spp_dev: __spp_insert_ifa: APID of Set IFA Next: %d", (ifa->ifa_next)->ifa_local);
     spp_device->ifa_list = ifa;
