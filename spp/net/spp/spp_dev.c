@@ -152,21 +152,11 @@ int __spp_insert_ifa(struct spp_ifaddr *ifa, struct nlmsghdr *nlh, u32 pid)
         return 0;
     }
     printk(KERN_INFO "SPP: spp_insert_ifa: Adding new interface address now\n");
-    /* TODO: Verify all this logic and secondary handling...I'm pretty sure its not valid */
-    ifa->ifa_flags &= ~IFA_F_SECONDARY;
-    last_primary = &spp_device->ifa_list;
     for(ifap = &spp_device->ifa_list; (ifa1 = *ifap) != NULL; ifap = &ifa1->ifa_next){
-        if(!(ifa1->ifa_flags & IFA_F_SECONDARY))
-            last_primary = &ifa1->ifa_next;
         if(ifa1->ifa_local == ifa->ifa_local){
             spp_free_ifa(ifa);
             return -EEXIST;
         }
-        ifa->ifa_flags |= IFA_F_SECONDARY;
-    }
-    if(!(ifa->ifa_flags & IFA_F_SECONDARY)){
-        net_srandom(ifa->ifa_local);
-        ifap = last_primary;
     }
     ifa->ifa_next = *ifap;
     *ifap = ifa;
