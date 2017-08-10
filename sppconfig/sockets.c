@@ -50,7 +50,6 @@ int sockets_open(int family)
     	}
 
 
-      fflush(stdout); fsync(STDOUT_FILENO); sleep(1);
     	af->fd = socket(af->af, type, 0);
       printf("sockets: af->af = %d af->fd = %d\n\r", af->af, af->fd);
     	if (af->fd >= 0)
