@@ -50,12 +50,16 @@
 #include <linux/spinlock.h>
 #include <net/tcp_states.h>
 #include <net/spp.h>
+#include <linux/crypto.h>
+#include <crypto/aes.h>
 
 /* Assorted variables for use */
 
 int sysctl_spp_idle_timer = SPP_DEFAULT_IDLE;
 int sysctl_spp_encrypt = 0;
 char sysctl_spp_encryptionkey[16] = "loremipsumdolor";
+
+const char SPP_ENCRYPTION_ALG_NAME[9] = "ecb(aes)";
 
 const spp_address spp_defaddr = {2001};
 const spp_address spp_nulladdr = {0};
@@ -449,6 +453,57 @@ out:
 }
 
 /*
+ * Encrypt data from an iovec into a sk_buff. sk_buff must be large enough to handle padded data.
+ * Returns -EFAULT on error.
+ *
+ * Note: this modifies the original iovec.
+ */
+static int spp_encrypt_fromiovec(struct sk_buff *skb, struct iovec *iov, size_t len, struct crypto_cipher *tfm)
+{
+    unsigned int i;
+    unsigned int plen = 0;                                  /* Length of padding for block */
+    unsigned int blksize = crypto_cipher_blocksize(tfm);    /* Size of transform block size */
+    unsigned char buff[blksize];                            /* Buffer space (iovec may not be properly sized) */
+    unsigned char debug[blksize];                           /* TODO:  RBF */
+ 
+    printk(KERN_INFO "SPP Encryption:\n");   /* TODO: RBF */
+
+    while (len > 0) {
+        /* save required padding (iov->iov_len will change after copy) */
+        if (iov->iov_len < blksize)
+            plen = blksize - iov->iov_len;
+
+        /* grab next block from iov (advances iov) */
+        if (copy_from_user(buff, iov->iov_base, blksize))
+            return -EFAULT;
+
+        /* pad last block (PKCS#5) */
+        if (plen)
+            memset(buff + (blksize - plen), plen, plen * sizeof(char));
+
+        /* Encrypt block into skb */
+        crypto_cipher_encrypt_one(tfm, skb_put(skb, blksize) /* advance skb pointer */, buff);
+
+        /* TODO: RBF */
+        crypto_cipher_encrypt_one(tfm, debug, buff);
+        for (i = 0; i < blksize; ++i)
+            printk("%02hx ", buff[i]);
+        printk(" ->  ");
+        for (i = 0; i < blksize; ++i);
+            printk("%02hx ", debug[i]);
+        printk("\n");
+
+        /* If ||M|| mod blksize = 0, go around again */
+        if (len != blksize)
+            len -= (plen) ? plen : blksize;
+    }
+
+    printk(KERN_INFO "SPP End Encryption\n");  /* TODO: RBF */
+
+    return 0;
+}
+
+/*
  * Socket Send Message
  */
 static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg, size_t len)
@@ -459,7 +514,8 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     struct sockaddr_spp *usspp = (struct sockaddr_spp *)msg->msg_name;
     struct sockaddr_spp daddr;
     struct spphdr *hdr;
-    int rc,slen,pkttype,shf;
+    struct crypto_cipher *tfm = 0;
+    int rc,slen,pkttype,shf,blksize;
     int addr_len = msg->msg_namelen;
 
     /* Check that length is not too big */
@@ -503,7 +559,22 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         daddr.sspp_addr = spp->d_addr;
     }
 
-    slen = sizeof(struct spphdr) + len;
+    /* Allocate encryption transform */
+    tfm = crypto_alloc_cipher(SPP_ENCRYPTION_ALG_NAME, 0, 0);
+    if(IS_ERR(tfm)) {
+        printk("Failed to allocate encryption transform");
+        goto out;
+    }
+    blksize = crypto_tfm_alg_blocksize(crypto_cipher_tfm(tfm));
+
+    /* Set transform key */
+    if(crypto_cipher_setkey(tfm, sysctl_spp_encryptionkey, sizeof(sysctl_spp_encryptionkey))) {
+        printk("Failed to set encryption key");
+        goto out;
+    }
+
+    /* SPP header size, SPP data length, and encryption padding length */
+    slen = sizeof(struct spphdr) + len + blksize - (len % blksize);
 
     skb = sock_alloc_send_skb(sk, slen, (msg->msg_flags & MSG_DONTWAIT), &rc);
     if(!skb)
@@ -526,7 +597,8 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->fields = htonl(hdr->fields);
     hdr->pdl = htons(len - 1); /* Subtract 1 from length as per spec */
 
-    rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
+    /* rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len); */
+    rc = spp_encrypt_fromiovec(skb, msg->msg_iov, len, tfm);
     if(rc){
         kfree_skb(skb);
         rc = -EFAULT;
@@ -536,6 +608,8 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     rc = len;
 
 out:
+    if (tfm)
+        crypto_free_cipher(tfm);
     release_sock(sk);
     return rc;
 }
