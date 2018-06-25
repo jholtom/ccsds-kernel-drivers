@@ -493,9 +493,13 @@ static int spp_encrypt_fromiovec(struct sk_buff *skb, struct iovec *iov, size_t 
             printk("%02hx ", debug[i]);
         printk("\n");
 
-        /* If ||M|| mod blksize = 0, go around again */
-        if (len != blksize)
-            len -= (plen) ? plen : blksize;
+        /* If ||M|| mod blksize = 0, append extra padded block */
+        if (len == blksize) {
+            memset(buff, blksize, blksize * sizeof(char));
+            crypto_cipher_encrypt_one(tfm, skb_put(skb, blksize) /* advance skb pointer */, buff);
+        }
+
+        len -= (plen) ? plen : blksize;
     }
 
     printk(KERN_INFO "SPP End Encryption\n");  /* TODO: RBF */
