@@ -59,7 +59,7 @@ int sysctl_spp_idle_timer = SPP_DEFAULT_IDLE;
 int sysctl_spp_encrypt = 0;
 char sysctl_spp_encryptionkey[16] = "loremipsumdolor";
 
-const char SPP_ENCRYPTION_ALG_NAME[9] = "ecb(aes)";
+const char SPP_ENCRYPTION_ALG_NAME[4] = "aes";
 
 const spp_address spp_defaddr = {2001};
 const spp_address spp_nulladdr = {0};
