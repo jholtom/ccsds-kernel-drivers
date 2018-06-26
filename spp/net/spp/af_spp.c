@@ -662,6 +662,44 @@ out:
 }
 
 /*
+ * Decrypt data from a sk_buff into an iovec.
+ * Returns -EFAULT on error.
+ */
+static int spp_decrypt_toiovec(u8 *kdata, struct iovec *iov, size_t len, struct crypto_cipher *tfm) {
+    unsigned int i;
+    size_t copy;                                    /* bytes to copy */
+    size_t offset = 0;                              /* iovec write offset */
+    size_t blksize = crypto_cipher_blocksize(tfm);  /* Encryption blocksize */
+    u8 buff[blksize];                               /* Decryption buffer */
+
+    while (len > 0) {
+        /* TODO: RBF */
+        for (i = 0; i < blksize; i++)
+            printk("%02hx ", kdata[i]);
+
+        /* Decrypt to buffer */
+        crypto_cipher_decrypt_one(tfm, buff, kdata);
+
+        /* TODO: RBF */
+        printk(" ->  ");
+        for (i = 0; i < blksize; i++)
+            printk("%02hx ", buff[i]);
+        printk("\n");
+
+        /* Write buffer to iovec */
+        copy = min_t(size_t, len, blksize);
+        if(memcpy_toiovecend(iov, buff, offset, copy))
+            return -EFAULT;
+
+        /* Update counters */
+        kdata += blksize;
+        offset += blksize;
+    }
+
+    return 0;
+}
+
+/*
  * Socket Receive Message
  * TODO: Complete method with correct implementation
  */
@@ -674,6 +712,7 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     struct spphdr *hdr;
     unsigned int hdrfields;
     __be16 pdl;
+    struct crypto_cipher *tfm;
 
     lock_sock(sk);
 
@@ -690,7 +729,24 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         printk(KERN_INFO "SPP: spp_recvmsg: Truncating message.\n");
         msg->msg_flags |= MSG_TRUNC;
     }
-    skb_copy_datagram_iovec(skb, offset, msg->msg_iov, copied);
+
+    /* Set up decryption transform */
+    tfm = crypto_alloc_cipher(SPP_ENCRYPTION_ALG_NAME, 0, 0);
+    if(IS_ERR(tfm)) {
+        printk("Failed to allocate decryption transform");
+        goto out;
+    }
+
+    /* Set transform key */
+    if(crypto_cipher_setkey(tfm, sysctl_spp_encryptionkey, sizeof(sysctl_spp_encryptionkey))) {
+        printk("Failed to set encryption key");
+        goto out;
+    }
+
+    /* Decrypt message into iovec */
+    if(spp_decrypt_toiovec(skb->data, msg->msg_iov, copied, tfm))
+        goto out;
+
     if(msg->msg_namelen != 0){
         struct sockaddr_spp *addr = (struct sockaddr_spp *)msg->msg_name;
         addr->sspp_family = AF_SPP;
@@ -705,6 +761,8 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     rc = copied;
 
 out:
+    if (tfm)
+        crypto_free_cipher(tfm);
     release_sock(sk);
     return rc;
 }
