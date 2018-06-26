@@ -672,6 +672,8 @@ static int spp_decrypt_toiovec(u8 *kdata, struct iovec *iov, size_t len, struct 
     size_t blksize = crypto_cipher_blocksize(tfm);  /* Encryption blocksize */
     u8 buff[blksize];                               /* Decryption buffer */
 
+    printk("SPP Decryption:\n");    /* TODO: RBF */
+
     while (len > 0) {
         /* TODO: RBF */
         for (i = 0; i < blksize; i++)
@@ -695,6 +697,8 @@ static int spp_decrypt_toiovec(u8 *kdata, struct iovec *iov, size_t len, struct 
         kdata += blksize;
         offset += blksize;
     }
+
+    printk("SPP End Decryption\n");    /* TODO: RBF */
 
     return 0;
 }
