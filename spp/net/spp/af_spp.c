@@ -540,6 +540,8 @@ static int spp_encrypt_fromiovec(struct sk_buff *skb, struct iovec *iov, size_t 
             crypto_cipher_encrypt_one(tfm, skb_put(skb, blksize) /* advance skb pointer */, buff);
         }
 
+        /* Update counters */
+        offset += blksize;
         len -= (plen) ? (blksize - plen) : blksize;
     }
 
