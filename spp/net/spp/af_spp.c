@@ -696,6 +696,7 @@ static int spp_decrypt_toiovec(u8 *kdata, struct iovec *iov, size_t len, struct 
         /* Update counters */
         kdata += blksize;
         offset += blksize;
+        len -= copy;
     }
 
     printk("SPP End Decryption\n");    /* TODO: RBF */
@@ -748,7 +749,7 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     }
 
     /* Decrypt message into iovec */
-    if(spp_decrypt_toiovec(skb->data, msg->msg_iov, copied, tfm))
+    if(spp_decrypt_toiovec(skb->data + offset, msg->msg_iov, copied, tfm))
         goto out;
 
     if(msg->msg_namelen != 0){
