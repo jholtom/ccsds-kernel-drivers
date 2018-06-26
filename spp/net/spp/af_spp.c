@@ -453,6 +453,38 @@ out:
 }
 
 /*
+ * Copy data of length len from an iovec into kernel space starting at an offset.
+ * Returns -EFAULT on error.
+ */
+static int memcpy_partial_fromiovec(u8 *kdata, struct iovec *iov, size_t offset, size_t len) {
+    size_t copy, rem;
+
+    /* Skip over finished iovecs */
+    while (offset >= iov->iov_len) {
+        offset -= iov->iov_len;
+        iov++;
+    }
+
+    while (len > 0) {
+        rem = iov->iov_len - offset;        /* Remaining bytes in iovec */
+        copy = min_t(size_t, len, rem);     /* Number of bytes to copy from this iovec */
+
+        /* Copy bytes */
+        if(copy_from_user(kdata, iov->iov_base + offset, copy))
+            return -EFAULT;
+
+        /* Update counters */
+        offset = 0;         /* We only need the offset on the first copy */
+        kdata += copy;
+        len -= copy;
+        if (copy == rem)
+            iov++;          /* iovec was consumed */
+    }
+
+    return 0;
+}
+
+/*
  * Encrypt data from an iovec into a sk_buff. sk_buff must be large enough to handle padded data.
  * Returns -EFAULT on error.
  *
@@ -461,35 +493,44 @@ out:
 static int spp_encrypt_fromiovec(struct sk_buff *skb, struct iovec *iov, size_t len, struct crypto_cipher *tfm)
 {
     unsigned int i;
-    unsigned int plen = 0;                                  /* Length of padding for block */
-    unsigned int blksize = crypto_cipher_blocksize(tfm);    /* Size of transform block size */
+    size_t copy;
+    size_t plen = 0;                                  /* Length of padding for block */
+    size_t blksize = crypto_cipher_blocksize(tfm);    /* Size of transform block size */
+    size_t offset = 0;
     unsigned char buff[blksize];                            /* Buffer space (iovec may not be properly sized) */
     unsigned char debug[blksize];                           /* TODO:  RBF */
  
     printk(KERN_INFO "SPP Encryption:\n");   /* TODO: RBF */
 
     while (len > 0) {
-        /* save required padding (iov->iov_len will change after copy) */
-        if (iov->iov_len < blksize)
-            plen = blksize - iov->iov_len;
+        /* Get copy size */
+        if (len < blksize) {
+            /* Block and padding */
+            plen = blksize - len;
+            copy = len;
 
-        /* grab next block from iov (advances iov) */
-        if (copy_from_user(buff, iov->iov_base, blksize))
+            /* Pad end of block (PKCS#5) */
+            memset(buff + (blksize - plen), plen, plen * sizeof(char));
+        } else {
+            /* Full data block */
+            copy = blksize;
+        }
+
+        /* Copy block */
+        if (memcpy_partial_fromiovec(buff, iov, offset, copy))
             return -EFAULT;
 
-        /* pad last block (PKCS#5) */
-        if (plen)
-            memset(buff + (blksize - plen), plen, plen * sizeof(char));
-
-        /* Encrypt block into skb */
-        crypto_cipher_encrypt_one(tfm, skb_put(skb, blksize) /* advance skb pointer */, buff);
-
         /* TODO: RBF */
-        crypto_cipher_encrypt_one(tfm, debug, buff);
         for (i = 0; i < blksize; ++i)
             printk("%02hx ", buff[i]);
         printk(" ->  ");
-        for (i = 0; i < blksize; ++i);
+
+        /* Encrypt block to socket buffer */
+        crypto_cipher_encrypt_one(tfm, skb_put(skb, blksize) /* append data */, buff);
+        crypto_cipher_encrypt_one(tfm, debug, buff);
+
+        /* TODO: RBF */
+        for (i = 0; i < blksize; ++i)
             printk("%02hx ", debug[i]);
         printk("\n");
 
@@ -499,7 +540,7 @@ static int spp_encrypt_fromiovec(struct sk_buff *skb, struct iovec *iov, size_t 
             crypto_cipher_encrypt_one(tfm, skb_put(skb, blksize) /* advance skb pointer */, buff);
         }
 
-        len -= (plen) ? plen : blksize;
+        len -= (plen) ? (blksize - plen) : blksize;
     }
 
     printk(KERN_INFO "SPP End Encryption\n");  /* TODO: RBF */
