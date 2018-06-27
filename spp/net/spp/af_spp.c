@@ -492,15 +492,11 @@ static int memcpy_partial_fromiovec(u8 *kdata, struct iovec *iov, size_t offset,
  */
 static int spp_encrypt_fromiovec(struct sk_buff *skb, struct iovec *iov, size_t len, struct crypto_cipher *tfm)
 {
-    unsigned int i;
     size_t copy;
-    size_t plen = 0;                                  /* Length of padding for block */
-    size_t blksize = crypto_cipher_blocksize(tfm);    /* Size of transform block size */
+    size_t plen = 0;                                /* Length of padding for block */
+    size_t blksize = crypto_cipher_blocksize(tfm);  /* Size of transform block size */
     size_t offset = 0;
-    unsigned char buff[blksize];                            /* Buffer space (iovec may not be properly sized) */
-    unsigned char debug[blksize];                           /* TODO:  RBF */
- 
-    printk(KERN_INFO "SPP Encryption:\n");   /* TODO: RBF */
+    unsigned char buff[blksize];                    /* Buffer space (iovec may not be properly sized) */
 
     while (len > 0) {
         /* Get copy size */
@@ -520,19 +516,8 @@ static int spp_encrypt_fromiovec(struct sk_buff *skb, struct iovec *iov, size_t 
         if (memcpy_partial_fromiovec(buff, iov, offset, copy))
             return -EFAULT;
 
-        /* TODO: RBF */
-        for (i = 0; i < blksize; ++i)
-            printk("%02hx ", buff[i]);
-        printk(" ->  ");
-
         /* Encrypt block to socket buffer */
         crypto_cipher_encrypt_one(tfm, skb_put(skb, blksize) /* append data */, buff);
-        crypto_cipher_encrypt_one(tfm, debug, buff);
-
-        /* TODO: RBF */
-        for (i = 0; i < blksize; ++i)
-            printk("%02hx ", debug[i]);
-        printk("\n");
 
         /* If ||M|| mod blksize = 0, append extra padded block */
         if (len == blksize) {
@@ -544,8 +529,6 @@ static int spp_encrypt_fromiovec(struct sk_buff *skb, struct iovec *iov, size_t 
         offset += blksize;
         len -= (plen) ? (blksize - plen) : blksize;
     }
-
-    printk(KERN_INFO "SPP End Encryption\n");  /* TODO: RBF */
 
     return 0;
 }
@@ -644,7 +627,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->fields = htonl(hdr->fields);
     hdr->pdl = htons(len - 1); /* Subtract 1 from length as per spec */
 
-    /* rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len); */
+    /* Encrypt to skb */
     rc = spp_encrypt_fromiovec(skb, msg->msg_iov, len, tfm);
     if(rc){
         kfree_skb(skb);
@@ -666,27 +649,14 @@ out:
  * Returns -EFAULT on error.
  */
 static int spp_decrypt_toiovec(u8 *kdata, struct iovec *iov, size_t len, struct crypto_cipher *tfm) {
-    unsigned int i;
     size_t copy;                                    /* bytes to copy */
     size_t offset = 0;                              /* iovec write offset */
     size_t blksize = crypto_cipher_blocksize(tfm);  /* Encryption blocksize */
     u8 buff[blksize];                               /* Decryption buffer */
 
-    printk("SPP Decryption:\n");    /* TODO: RBF */
-
     while (len > 0) {
-        /* TODO: RBF */
-        for (i = 0; i < blksize; i++)
-            printk("%02hx ", kdata[i]);
-
         /* Decrypt to buffer */
         crypto_cipher_decrypt_one(tfm, buff, kdata);
-
-        /* TODO: RBF */
-        printk(" ->  ");
-        for (i = 0; i < blksize; i++)
-            printk("%02hx ", buff[i]);
-        printk("\n");
 
         /* Write buffer to iovec */
         copy = min_t(size_t, len, blksize);
@@ -698,8 +668,6 @@ static int spp_decrypt_toiovec(u8 *kdata, struct iovec *iov, size_t len, struct 
         offset += blksize;
         len -= copy;
     }
-
-    printk("SPP End Decryption\n");    /* TODO: RBF */
 
     return 0;
 }
@@ -717,7 +685,7 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     struct spphdr *hdr;
     unsigned int hdrfields;
     __be16 pdl;
-    struct crypto_cipher *tfm;
+    struct crypto_cipher *tfm = 0;
 
     lock_sock(sk);
 
@@ -731,7 +699,6 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     copied -= offset;
     if( copied > size){
         copied = size;
-        printk(KERN_INFO "SPP: spp_recvmsg: Truncating message.\n");
         msg->msg_flags |= MSG_TRUNC;
     }
 
