@@ -51,7 +51,6 @@
 #include <net/tcp_states.h>
 #include <net/spp.h>
 #include <linux/crypto.h>
-#include <crypto/aes.h>
 
 /* Assorted variables for use */
 
