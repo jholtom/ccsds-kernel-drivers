@@ -4,7 +4,7 @@
 
 menuconfig SPP
     depends on NET
-    bool "Space Packet Protocol support"
+    tristate "Space Packet Protocol support"
     help
       If you want to use the CCSDS 133.0-B-1 specification, you'll know to say yes here.
       Made with love by Jacob Holtom and his team of crackpot engineers.
