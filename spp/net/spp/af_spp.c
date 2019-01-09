@@ -624,7 +624,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     hdr->fields = (hdr->fields << 2) | 0x00000003; /* We are unsegmented data */
     hdr->fields = (hdr->fields << 14) | 0x000000FF;
     hdr->fields = htonl(hdr->fields);
-    hdr->pdl = htons(slen - 1); /* Subtract 1 from length as per spec */
+    hdr->pdl = htons(slen - 1 - sizeof(struct spphdr)); /* Subtract 1 from length as per spec */
 
     /* Encrypt to skb */
     rc = spp_encrypt_fromiovec(skb, msg->msg_iov, len, tfm);
