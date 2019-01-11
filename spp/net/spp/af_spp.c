@@ -56,7 +56,7 @@
 
 int sysctl_spp_idle_timer = SPP_DEFAULT_IDLE;
 int sysctl_spp_encrypt = 0;
-char sysctl_spp_encryptionkey[16] = "loremipsumdolor";
+char sysctl_spp_encryptionkey[17] = "loremipsumdolore";
 
 const char SPP_ENCRYPTION_ALG_NAME[4] = "aes";
 
@@ -597,7 +597,7 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     blksize = crypto_tfm_alg_blocksize(crypto_cipher_tfm(tfm));
 
     /* Set transform key */
-    if(crypto_cipher_setkey(tfm, sysctl_spp_encryptionkey, sizeof(sysctl_spp_encryptionkey))) {
+    if(crypto_cipher_setkey(tfm, sysctl_spp_encryptionkey, strlen(sysctl_spp_encryptionkey))) {
         printk("Failed to set encryption key");
         goto out;
     }
@@ -718,7 +718,7 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     }
 
     /* Set transform key */
-    if(crypto_cipher_setkey(tfm, sysctl_spp_encryptionkey, sizeof(sysctl_spp_encryptionkey))) {
+    if(crypto_cipher_setkey(tfm, sysctl_spp_encryptionkey, strlen(sysctl_spp_encryptionkey))) {
         printk("Failed to set encryption key");
         goto out;
     }

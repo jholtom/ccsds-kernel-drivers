@@ -91,7 +91,7 @@ static inline __be16 spp_type_trans(struct sk_buff *skb, struct net_device *dev)
 /* af_spp.c */
 extern int sysctl_spp_idle_timer;
 extern int sysctl_spp_encrypt;
-extern char sysctl_spp_encryptionkey[16];
+extern char sysctl_spp_encryptionkey[17];
 
 
 static inline struct spp_dev *__spp_dev_get_rcu(const struct net_device *dev)
