@@ -603,8 +603,12 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     }
 
     /* SPP header size, SPP data length, and encryption padding length */
-    slen = sizeof(struct spphdr) + len + blksize - (len % blksize);
-
+    if(sysctl_spp_encrypt){
+        slen = sizeof(struct spphdr) + len + blksize - (len % blksize);
+    }
+    else{
+        slen = sizeof(struct spphdr) + len;
+    }
     skb = sock_alloc_send_skb(sk, slen, (msg->msg_flags & MSG_DONTWAIT), &rc);
     if(!skb)
         goto out;
@@ -618,16 +622,21 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     shf = 0; /* TODO: Enable secondary header support */
     hdr = (struct spphdr *)skb_push(skb, sizeof(struct spphdr));
     hdr->fields = 0;
-    hdr->fields = (hdr->fields << 1) | (pkttype ? 0x00000001 : 0x00000000);
-    hdr->fields = (hdr->fields << 1) | (shf ? 0x00000001 : 0x00000000);
-    hdr->fields = (hdr->fields << 11) | daddr.sspp_addr.spp_apid;
+    hdr->fields = (hdr->fields << 1) | (pkttype ? 0x00000001 : 0x00000000); /* Packet Type - Can be TM or TC */
+    hdr->fields = (hdr->fields << 1) | (shf ? 0x00000001 : 0x00000000); /* Second Header Field -> Currently should also be disabled */
+    hdr->fields = (hdr->fields << 11) | daddr.sspp_addr.spp_apid; /* APID */
     hdr->fields = (hdr->fields << 2) | 0x00000003; /* We are unsegmented data */
     hdr->fields = (hdr->fields << 14) | 0x000000FF;
-    hdr->fields = htonl(hdr->fields);
-    hdr->pdl = htons(slen - 1 - sizeof(struct spphdr)); /* Subtract 1 from length as per spec */
-
-    /* Encrypt to skb */
-    rc = spp_encrypt_fromiovec(skb, msg->msg_iov, len, tfm);
+    hdr->fields = htonl(hdr->fields); /* Translates to the correct network endianness */
+    if(sysctl_spp_encrypt){
+        /* Encrypt to skb */
+        hdr->pdl = htons(slen - 1 - sizeof(struct spphdr)); /* Subtract 1 from length as per spec -> Packet data Length (thus we also remove the header length) */
+        rc = spp_encrypt_fromiovec(skb, msg->msg_iov, len, tfm);
+    }
+    else {
+        hdr->pdl = htons(len - 1); /* Subtract 1 from length as per spec */
+        rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
+    }
     if(rc){
         kfree_skb(skb);
         rc = -EFAULT;
@@ -714,16 +723,20 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
         goto out;
     }
 
-    /* Decrypt message into iovec */
-    if(spp_decrypt_toiovec(skb->data + offset, msg->msg_iov, copied, tfm))
-        goto out;
+    if(sysctl_spp_encrypt){
+        spp_decrypt_toiovec(skb->data + offset, msg->msg_iov, copied, tfm);
+    }
+    else {
+         skb_copy_datagram_iovec(skb, offset, msg->msg_iov, copied);
+    }
 
     if(msg->msg_namelen != 0){
         struct sockaddr_spp *addr = (struct sockaddr_spp *)msg->msg_name;
         addr->sspp_family = AF_SPP;
         hdr = (struct spphdr *)skb->data;
         hdrfields = ntohl(hdr->fields);
-        addr->sspp_addr.spp_apid = ((hdrfields & 0x07FF0000) >> 16);
+        /* TODO: Retrieve all fields from header */
+        addr->sspp_addr.spp_apid = ((hdrfields & 0x07FF0000) >> 16); /* Retrieve APID */
         pdl = ntohs(hdr->pdl) + 1; /* Restore the full length by adding that 1 back */
         /* TODO: Add check of the Packet Data Length for validity */
         msg->msg_namelen = sizeof(struct sockaddr_spp);
@@ -770,15 +783,15 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 
     if(!dev)
         goto done;
-/*  TODO: Fix this so it no longer accidentally modifies spp_device->ifa_list
- * spp_device = __spp_dev_get_rtnl(dev);
-    if(spp_device){
-        for(ifap = &spp_device->ifa_list; (ifa = *ifap) != NULL; ifap = &ifa->ifa_next)
-        {
-            if(!strcmp(ifr.ifr_name, ifa->ifa_label))
-                break;
-        }
-    }*/
+    /*  TODO: Fix this so it no longer accidentally modifies spp_device->ifa_list
+     * spp_device = __spp_dev_get_rtnl(dev);
+     if(spp_device){
+     for(ifap = &spp_device->ifa_list; (ifa = *ifap) != NULL; ifap = &ifa->ifa_next)
+     {
+     if(!strcmp(ifr.ifr_name, ifa->ifa_label))
+     break;
+     }
+     }*/
     switch (cmd) {
         case TIOCOUTQ: {
                            int amount = sk->sk_sndbuf - sk_wmem_alloc_get(sk);
