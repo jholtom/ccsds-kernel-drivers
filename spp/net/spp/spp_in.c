@@ -17,3 +17,17 @@
  *               Jacob Willis <willisj2@byu.edu>
  *
  */
+
+#include <linux/errno.h>
+#include <linux/kernel.h>
+#include <linux/string.h>
+#include <linux/skbuff.h>
+#include <net/sock.h>
+#include <net/tcp_states.h>
+#include <net/spp.h>
+
+int spp_backlog_rcv(struct sock *sk, struct sk_buff *skb)
+{
+    printk(KERN_INFO "SPP: spp_backlog_rcv: We do not support backlogging. Exiting...\n");
+    return -ESOCKTNOSUPPORT;
+}

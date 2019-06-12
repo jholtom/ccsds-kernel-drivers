@@ -1,31 +1,70 @@
-/* sysctl for SPP - Jacob Holtom */
+/*
+ *    Space Packet Protocol Packet Layer release 001
+ *
+ *    This is BETA software, it may break your machine, fail randomly and
+ *    maybe have a lot of problems.  It works enough that its going to space.
+ *
+ *    This module:
+ *              This module is free software; you can redistribute it and/or
+ *              modify it under the terms of the GNU General Public License
+ *              as published by the Free Software Foundation; either version
+ *              2 of the License, or (at your option) any later version.
+ *
+ *      History
+ *      SPP 001         Jacob Holtom and Jacob Willis   Wrote the initial implementation
+ *
+ *      Authors: Jacob Holtom <jacob@holtom.me>
+ *               Jacob Willis <willisj2@byu.edu>
+ *
+ */
 #include <linux/mm.h>
 #include <linux/sysctl.h>
 #include <linux/init.h>
 #include <net/spp.h>
 
-static int min_window[] = {1}, max_window = {7}; //Based on ROSE protocol, may need to change
+static int min_timer[] = {1 * HZ };
+static int max_timer[] = {300 * HZ};
 
 static struct ctl_table_header *spp_table_header;
 
 static struct ctl_table spp_table[] = {
     {
-        .procname = "window_size",
-        .data = &sysctl_spp_window_size,
+        .procname = "idle_timer",
+        .data = &sysctl_spp_idle_timer,
         .maxlen = sizeof(int),
         .mode = 0644,
         .proc_handler = proc_dointvec_minmax,
-        .extra1 = &min_window,
-        .extra2 = &max_window
+        .extra1 = &min_timer,
+        .extra2 = &max_timer,
     },
+    {
+        .procname = "encryption",
+        .data = &sysctl_spp_encrypt,
+        .maxlen = sizeof(int),
+        .mode = 0644,
+        .proc_handler = proc_dointvec,
+    },
+    {
+        .procname = "encryption_key",
+        .data = &sysctl_spp_encryptionkey,
+        .maxlen = 16,
+        .mode = 0644,
+        .proc_handler = proc_dostring,
+    },
+    { }
+};
+
+static struct ctl_path spp_path[] = {
+    { .procname = "net", },
+    { .procname = "spp", },
     { }
 };
 
 void __init spp_register_sysctl(void)
 {
-    spp_table_header = register_net_sysctl(&init_net, "net/spp", spp_table);
+    spp_table_header = register_sysctl_paths(spp_path, spp_table);
 }
 void spp_unregister_sysctl(void)
 {
-    unregister_net_sysctl_table(spp_table_header);
+    unregister_sysctl_table(spp_table_header);
 }
