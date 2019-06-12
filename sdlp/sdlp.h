@@ -2,9 +2,20 @@
 #define _LINUX_SDLP_H
 
 #define SDLP_MAXCH 256 /* Maximum channels... */
-#define SDLP_MTU /* Need to find out MTU */
 
-/* Any other definitions */
+/* TM Frame Size
+ * TC Frame Size
+ * TM FEC
+ * TC FEC
+ */
+
+/* Timestamp Frame:
+ * COP-1/FARM:
+ * CTLU:
+ * ASM:
+ * TC/TM Whitening:
+ * Virtual Channels (VC0, VC1)
+ */
 
 struct sdlp {
     int magic;
@@ -32,6 +43,6 @@ struct sdlp {
     pid_t pid;
 }
 
-#define SDLP_MAGIC 0x /* Allocate magic number */
+#define SDLP_MAGIC 0x5306 /* Allocate magic number */
 
 #endif
