@@ -23,7 +23,7 @@
 #include <linux/types.h>
 #include <linux/socket.h>
 #include <linux/in.h>
-#include <linux/smp_lock.h>
+#include <linux/mutex.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
 #include <linux/timer.h>
@@ -51,6 +51,8 @@
 #include <net/tcp_states.h>
 #include <net/spp.h>
 #include <linux/crypto.h>
+
+static DEFINE_MUTEX(spp_mutex); //TODO move this to better location.
 
 /* Assorted variables for use */
 
@@ -149,7 +151,7 @@ static int spp_setsockopt(struct socket *sock, int level, int optname, char __us
     struct sock *sk = sock->sk;
     int rc = -ENOPROTOOPT;
 
-    lock_kernel();
+    mutex_lock(&spp_mutex);
     if (level != SOL_SPP || optname != SPP_PKTTYPE)
         goto out;
 
@@ -165,7 +167,7 @@ static int spp_setsockopt(struct socket *sock, int level, int optname, char __us
     rc = 0;
 
 out:
-    unlock_kernel();
+    mutex_unlock(&spp_mutex);
     return rc;
 }
 
@@ -178,7 +180,7 @@ static int spp_getsockopt(struct socket *sock, int level, int optname, char __us
     struct sock *sk = sock->sk;
     int val, len, rc = -ENOPROTOOPT;
 
-    lock_kernel();
+    mutex_lock(&spp_mutex);
     if (level != SOL_SPP || optname != SPP_PKTTYPE)
         goto out;
 
@@ -199,7 +201,7 @@ static int spp_getsockopt(struct socket *sock, int level, int optname, char __us
     val = spp_sk(sk)->type;
     rc = copy_to_user(optval,&val,len) ? -EFAULT : 0;
 out:
-    unlock_kernel();
+    mutex_unlock(&spp_mutex);
     return rc;
 }
 
@@ -433,7 +435,7 @@ static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_l
     struct spp_sock *spp = spp_sk(sk);
     int rc = 0;
 
-    lock_kernel();
+    mutex_lock(&spp_mutex);
     if (peer) {
         if(sk->sk_state != TCP_ESTABLISHED){
             rc = -ENOTCONN;
@@ -447,7 +449,7 @@ static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_l
     *uaddr_len = sizeof(*sspp);
 
 out:
-    unlock_kernel();
+    mutex_unlock(&spp_mutex);
     return rc;
 }
 
@@ -768,7 +770,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     struct spp_ifaddr *ifa = NULL;
     struct net_device *dev;
     int rc = -EFAULT;
-    lock_kernel();
+    mutex_lock(&spp_mutex);
     /* Bring the user request into kernel space */
     if (copy_from_user(&ifr, argp, sizeof(struct ifreq)))
         goto out;
@@ -847,7 +849,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                               }
                               else {
                                   rc = 0;
-                                  if(ifa->ifa_local == sin->sspp_addr.spp_apid)
+                                 if(ifa->ifa_local == sin->sspp_addr.spp_apid)
                                       break;
                                   spp_del_ifa(spp_device, ifap, 0);
                               }
@@ -883,7 +885,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                          return -ENOIOCTLCMD;
                          break;
     }
-    unlock_kernel();
+    mutex_unlock(&spp_mutex);
 done:
     rtnl_unlock();
 out:
