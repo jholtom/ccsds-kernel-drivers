@@ -246,7 +246,7 @@ static int spp_create(struct net *net, struct socket *sock, int protocol, int ke
     if(sock->type != SOCK_DGRAM || protocol != 0)
         return -ESOCKTNOSUPPORT;
 
-    sk = sk_alloc(net, AF_SPP, GFP_ATOMIC, &spp_proto);
+    sk = sk_alloc(net, AF_SPP, GFP_ATOMIC, &spp_proto, kern);
     if (sk == NULL)
         return -ENOMEM;
 
@@ -419,7 +419,7 @@ out:
  * TODO: Figure out correct behavior
  * NOTE: This isn't really something that can happen in SPP, since it is a connectionless protocol.
  */
-static int spp_accept(struct socket *sock, struct socket *newsock, int flags)
+static int spp_accept(struct socket *sock, struct socket *newsock, int flags, bool kern)
 {
     int rc = -EINVAL;
     return rc;
@@ -428,13 +428,13 @@ static int spp_accept(struct socket *sock, struct socket *newsock, int flags)
 /*
  * Socket Get Name: If peer and connected, set addr to d_addr, else, set to s_addr.  Also set AF and adjust address length
  */
-static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_len, int peer)
+static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int peer)
 {
     struct sockaddr_spp *sspp = (struct sockaddr_spp *)uaddr;
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
     int rc = 0;
-
+    // May not actually need to lock here
     mutex_lock(&spp_mutex);
     if (peer) {
         if(sk->sk_state != TCP_ESTABLISHED){
@@ -446,7 +446,7 @@ static int spp_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_l
         sspp->sspp_addr = spp->s_addr;
 
     sspp->sspp_family = AF_SPP;
-    *uaddr_len = sizeof(*sspp);
+    rc = sizeof(*sspp);
 
 out:
     mutex_unlock(&spp_mutex);
@@ -537,7 +537,7 @@ static int spp_encrypt_fromiovec(struct sk_buff *skb, struct iovec *iov, size_t 
 /*
  * Socket Send Message
  */
-static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg, size_t len)
+static int spp_sendmsg(struct socket *sock, struct msghdr *msg, size_t len)
 {
     struct sock *sk = sock->sk;
     struct spp_sock *spp = spp_sk(sk);
@@ -633,11 +633,12 @@ static int spp_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     if(sysctl_spp_encrypt){
         /* Encrypt to skb */
         hdr->pdl = htons(slen - 1 - sizeof(struct spphdr)); /* Subtract 1 from length as per spec -> Packet data Length (thus we also remove the header length) */
-        rc = spp_encrypt_fromiovec(skb, msg->msg_iov, len, tfm);
+        rc = spp_encrypt_fromiovec(skb, (struct iovec *)msg->msg_iter.iov, len, tfm);
     }
     else {
         hdr->pdl = htons(len - 1); /* Subtract 1 from length as per spec */
-        rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
+        //rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
+        rc = copy_from_iter(skb_put(skb,len), len, &msg->msg_iter);
     }
     if(rc){
         kfree_skb(skb);
@@ -670,7 +671,7 @@ static int spp_decrypt_toiovec(u8 *kdata, struct iovec *iov, size_t len, struct 
 
         /* Write buffer to iovec */
         copy = min_t(size_t, len, blksize);
-        if(memcpy_toiovecend(iov, buff, offset, copy))
+        if(memcpy_toiovecend(iov, buff, offset, copy) != )
             return -EFAULT;
 
         /* Update counters */
@@ -686,7 +687,7 @@ static int spp_decrypt_toiovec(u8 *kdata, struct iovec *iov, size_t len, struct 
  * Socket Receive Message
  * TODO: Complete method with correct implementation
  */
-static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg, size_t size, int flags)
+static int spp_recvmsg(struct socket *sock, struct msghdr *msg, size_t size, int flags)
 {
     struct sock *sk = sock->sk;
     unsigned int copied, offset;
@@ -726,10 +727,10 @@ static int spp_recvmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *m
     }
 
     if(sysctl_spp_encrypt){
-        spp_decrypt_toiovec(skb->data + offset, msg->msg_iov, copied, tfm);
+        spp_decrypt_toiovec(skb->data + offset, (struct iovec *)msg->msg_iter.iov, copied, tfm);
     }
     else {
-         skb_copy_datagram_iovec(skb, offset, msg->msg_iov, copied);
+         skb_copy_datagram_msg(skb, offset, msg, copied);
     }
 
     if(msg->msg_namelen != 0){
