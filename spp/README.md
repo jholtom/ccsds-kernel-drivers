@@ -25,3 +25,7 @@
     ```
     #define SOL_SPP 278
     ```
+- Added the 'spp_ptr' field to your net_device...
+    - include/linux/netdevice.h
+    - in struct net_device, somewhere near the line for ax_25;
+    - add this field void                    *spp_ptr;       /* SPP specific data */

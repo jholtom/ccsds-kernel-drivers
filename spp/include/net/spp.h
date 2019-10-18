@@ -78,7 +78,7 @@ struct spp_dev {
 };
 
 extern struct hlist_head spp_list;
-extern spinlock_t spp_list_lock;
+extern rwlock_t spp_list_lock;
 
 static inline __be16 spp_type_trans(struct sk_buff *skb, struct net_device *dev)
 {

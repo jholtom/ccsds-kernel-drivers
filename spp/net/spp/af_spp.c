@@ -68,7 +68,7 @@ const spp_address spp_idleaddr = {2047};
 
 /* This list is a list of sockets */
 HLIST_HEAD(spp_list);
-DEFINE_SPINLOCK(spp_list_lock); /* Create a spin lock for the list */
+DEFINE_RWLOCK(spp_list_lock); /* Create a spin lock for the list */
 
 spp_address spp_addr; /* Current address of the local entity */
 
@@ -76,15 +76,15 @@ static const struct proto_ops spp_proto_ops; /* Forward define the protocol ops 
 
 struct sock *spp_get_socket(spp_address *dest_addr, int type){
     struct sock *s = NULL;
-    struct hlist_node *node;
-    spin_lock(&spp_list_lock);
-    sk_for_each(s, node, &spp_list){
+    
+    read_lock_bh(&spp_list_lock);
+    sk_for_each(s, &spp_list){
         if(sppcmp(&(spp_sk(s)->s_addr), dest_addr) && s->sk_type == type){
             sock_hold(s);
             return s;
         }
     }
-    spin_unlock(&spp_list_lock);
+    read_unlock_bh(&spp_list_lock);
     return NULL;
 }
 
@@ -93,9 +93,9 @@ struct sock *spp_get_socket(spp_address *dest_addr, int type){
  */
 static void spp_remove_sock(struct sock *sk)
 {
-    spin_lock_bh(&spp_list_lock); /* Acquire lock on socket list */
+    write_lock_bh(&spp_list_lock); /* Acquire lock on socket list */
     sk_del_node_init(sk); /* Remove socket from list and let it die */
-    spin_unlock_bh(&spp_list_lock); /* Release lock on socket list */
+    write_unlock_bh(&spp_list_lock); /* Release lock on socket list */
 }
 
 /*
@@ -104,9 +104,9 @@ static void spp_remove_sock(struct sock *sk)
 static void spp_kill_by_device(struct net_device *dev)
 {
     struct sock *s;
-    struct hlist_node *node;
+    
     write_lock_bh(&spp_list_lock);
-    sk_for_each(s, node, &spp_list){
+    sk_for_each(s, &spp_list){
         struct spp_sock *spp = spp_sk(s);
         if(spp->device == dev){
             spp_disconnect(s, ENETUNREACH,SPP_OUT_OF_ORDER,0);
@@ -121,9 +121,9 @@ static void spp_kill_by_device(struct net_device *dev)
  */
 static void spp_insert_socket(struct sock *sk)
 {
-    spin_lock_bh(&spp_list_lock); /* Acquire socket list lock */
+    write_lock_bh(&spp_list_lock); /* Acquire socket list lock */
     sk_add_node(sk, &spp_list); /* Add socket to the list of SPP sockets */
-    spin_unlock_bh(&spp_list_lock); /* Release socket list lock */
+    write_unlock_bh(&spp_list_lock); /* Release socket list lock */
 }
 
 void spp_destroy_socket(struct sock *sk){
