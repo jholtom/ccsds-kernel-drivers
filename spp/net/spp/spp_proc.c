@@ -29,8 +29,7 @@
 static __inline__ struct sock *spp_get_socket_idx(loff_t pos)
 {
     struct sock *s;
-    struct hlist_node *node;
-    sk_for_each(s, node, &spp_list)
+    sk_for_each(s, &spp_list)
         if(!pos--)
             goto found;
     s = NULL;
@@ -40,7 +39,7 @@ found:
 static void *spp_seq_socket_start(struct seq_file *seq, loff_t *pos) __acquires(spp_list_lock)
 {
     loff_t l = *pos;
-    spin_lock_bh(&spp_list_lock);
+    write_lock_bh(&spp_list_lock);
     return l ? spp_get_socket_idx(--l) : SEQ_START_TOKEN;
 }
 static void *spp_seq_socket_next(struct seq_file *seq, void *v, loff_t *pos)
@@ -58,7 +57,7 @@ out:
 }
 static void spp_seq_socket_stop(struct seq_file *seq, void *v) __releases(spp_list_lock)
 {
-    spin_unlock_bh(&spp_list_lock);
+    write_unlock_bh(&spp_list_lock);
 }
 static int spp_seq_socket_show(struct seq_file *seq, void *v)
 {

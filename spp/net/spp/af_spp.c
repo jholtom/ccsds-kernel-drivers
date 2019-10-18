@@ -659,7 +659,7 @@ out:
  * Decrypt data from a sk_buff into an iovec.
  * Returns -EFAULT on error.
  */
-static int spp_decrypt_toiovec(u8 *kdata, struct iovec *iov, size_t len, struct crypto_cipher *tfm) {
+static int spp_decrypt_toiovec(u8 *kdata, struct iov_iter iov, size_t len, struct crypto_cipher *tfm) {
     size_t copy;                                    /* bytes to copy */
     size_t offset = 0;                              /* iovec write offset */
     size_t blksize = crypto_cipher_blocksize(tfm);  /* Encryption blocksize */
@@ -671,7 +671,8 @@ static int spp_decrypt_toiovec(u8 *kdata, struct iovec *iov, size_t len, struct 
 
         /* Write buffer to iovec */
         copy = min_t(size_t, len, blksize);
-        if(memcpy_toiovecend(iov, buff, offset, copy) != )
+        //if(memcpy_toiovecend(iov, buff, offset, copy) != )
+        if(copy_to_iter(buff,copy,&iov) != copy)
             return -EFAULT;
 
         /* Update counters */
@@ -727,7 +728,7 @@ static int spp_recvmsg(struct socket *sock, struct msghdr *msg, size_t size, int
     }
 
     if(sysctl_spp_encrypt){
-        spp_decrypt_toiovec(skb->data + offset, (struct iovec *)msg->msg_iter.iov, copied, tfm);
+        spp_decrypt_toiovec(skb->data + offset, msg->msg_iter, copied, tfm);
     }
     else {
          skb_copy_datagram_msg(skb, offset, msg, copied);
