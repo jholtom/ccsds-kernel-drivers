@@ -845,6 +845,7 @@ static int spp_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
                               if(!ifa){
                                   rc = -ENOBUFS;
                                   ifa = spp_alloc_ifa();
+                                  printk(KERN_INFO "SPP: IOCTL: Returned from allocating IFA\n");
                                   if(!ifa)
                                       break;
                                   memcpy(ifa->ifa_label, dev->name, IFNAMSIZ);

@@ -188,6 +188,7 @@ int spp_set_ifa(struct net_device *dev, struct spp_ifaddr *ifa)
 
 struct spp_ifaddr *spp_alloc_ifa(void)
 {
+    printk(KERN_INFO "SPP: IOCTL: Attempting to allocate IFA\n");
     return kzalloc(sizeof(struct spp_ifaddr), GFP_KERNEL);
 }
 
