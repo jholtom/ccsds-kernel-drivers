@@ -95,6 +95,7 @@ void spp_dev_device_up(struct net_device *dev)
     spin_unlock_bh(&spp_dev_lock);
 
     rcu_assign_pointer(dev->spp_ptr, spp_dev);
+    printk(KERN_INFO "SPP: Successfully brought device up\n");
 out:
     return;
 }
