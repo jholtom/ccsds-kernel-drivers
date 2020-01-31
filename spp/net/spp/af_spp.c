@@ -640,6 +640,10 @@ static int spp_sendmsg(struct socket *sock, struct msghdr *msg, size_t len)
         hdr->pdl = htons(len - 1); /* Subtract 1 from length as per spec */
         //rc = memcpy_fromiovec(skb_put(skb,len), msg->msg_iov,len);
         rc = copy_from_iter(skb_put(skb,len), len, &msg->msg_iter);
+        if(rc == len){
+            printk(KERN_INFO "Succesfully copied un-enrcrypted socketbuffer\r\n");
+            rc = 0;
+        }
     }
     if(rc){
         kfree_skb(skb);
